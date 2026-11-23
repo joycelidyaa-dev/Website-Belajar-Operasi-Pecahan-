@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JejeCahan – Belajar dan Ukur Kemampuan Operasi Pecahan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1e293b;
+  --mut:#64748b;
+  --line:#e2e8f0;
+  --accent:#6366f1;
+  --accent2:#4f46e5;
+  --accent-soft:#eef2ff;
+  --accent-ring:#c7d2fe;
+  /* Identitas warna pecahan: Koral/Merah Muda (A), Biru Langit (B), Emerald (Hasil) */
+  --a:#fb7185;
+  --a2:#e11d48;
+  --a-soft:#fff1f2;
+  --a-ring:#fecdd3;
+  --b:#38bdf8;
+  --b2:#0284c7;
+  --b-soft:#f0f9ff;
+  --b-ring:#bae6fd;
+  --r:#10b981;
+  --r2:#059669;
+  --bad:#ef4444;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Fredoka","Trebuchet MS",system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  line-height:1.5;
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+  background:linear-gradient(135deg,#fdf2f8 0%,#eef2ff 48%,#ecfeff 100%);
+  transition:background .4s ease;
+}
+
+/* Latar belakang pastel lembut dengan simbol pecahan melayang */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bg::before{
+  content:"";position:absolute;inset:-20%;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(251,113,133,.2) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(56,189,248,.2) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(167,139,250,.2) 0%, transparent 50%);
+}
+.bg span{
+  position:absolute;
+  font-weight:700;
+  user-select:none;
+  animation:fl 14s ease-in-out infinite;
+  opacity:.32;
+}
+.bg span:nth-child(odd){color:#f43f5e}
+.bg span:nth-child(even){color:#0ea5e9}
+.bg span:nth-child(3n){color:#8b5cf6}
+@keyframes fl{
+  0%,100%{transform:translateY(0) rotate(-6deg) scale(1)}
+  50%{transform:translateY(-22px) rotate(8deg) scale(1.06)}
+}
+@media (prefers-reduced-motion:reduce){.bg span{animation:none}}
+
+/* Kanvas Konfeti */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+.wrap{max-width:740px;margin:0 auto;padding:16px 14px 48px;position:relative}
+
+/* Tombol Suara */
+.snd-btn{
+  position:absolute;
+  top:16px;right:14px;
+  width:42px;height:42px;
+  border-radius:50%;
+  border:2px solid #fff;
+  background:rgba(255,255,255,.85);
+  box-shadow:0 4px 10px rgba(99,102,241,.14);
+  font-size:1.15rem;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s;
+}
+.snd-btn:hover{transform:scale(1.08)}
+
+/* Header / Hero */
+.hero{text-align:center;margin:4px 0 18px}
+.logo{
+  display:inline-block;
+  font-size:2.9rem;
+  font-weight:700;
+  letter-spacing:.5px;
+  line-height:1.1;
+  color:#4f46e5;
+  text-shadow:0 3px 0 #c7d2fe;
+}
+.logo b{
+  color:#f43f5e;
+  text-shadow:0 3px 0 #fecdd3;
+}
+.tagline{
+  font-size:1rem;
+  margin:8px auto 0;
+  max-width:30em;
+  color:#475569;
+  font-weight:500;
+}
+
+/* Mode Toggle (Belajar vs Latihan vs Kalkulator) */
+.mode{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  margin-bottom:12px;
+  background:rgba(255,255,255,.8);
+  backdrop-filter:blur(8px);
+  border:2px solid #fff;
+  border-radius:20px;
+  padding:5px;
+  box-shadow:0 6px 16px rgba(99,102,241,.1);
+}
+.mode button{
+  border:0;
+  background:transparent;
+  border-radius:15px;
+  padding:8px 2px;
+  font-size:.8rem;
+  display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2;
+  font-weight:600;
+  cursor:pointer;
+  color:var(--mut);
+  font-family:inherit;
+  transition:all .2s ease;
+}
+.mode button:hover:not([aria-selected=true]){color:var(--ink);background:rgba(255,255,255,.6)}
+.mode button[aria-selected=true]{
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;
+  box-shadow:0 4px 10px rgba(99,102,241,.3);
+}
+
+.mode button i{font-style:normal;font-size:1.2rem}
+
+/* Tabs Operasi */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.tab{
+  border:2px solid #fff;
+  border-radius:18px;
+  padding:10px 4px;
+  font-size:.82rem;
+  cursor:pointer;
+  font-family:inherit;
+  font-weight:600;
+  box-shadow:0 4px 0 rgba(148,163,184,.25);
+  transition:all .18s ease;
+}
+.tab b{display:block;font-size:1.6rem;line-height:1.1;margin-bottom:2px}
+.tab[data-op=add]{--tc:#059669;--tbg:#ecfdf5;--tsh:#a7f3d0;background:var(--tbg);color:var(--tc);box-shadow:0 4px 0 var(--tsh)}
+.tab[data-op=sub]{--tc:#e11d48;--tbg:#fff1f2;--tsh:#fecdd3;background:var(--tbg);color:var(--tc);box-shadow:0 4px 0 var(--tsh)}
+.tab[data-op=mul]{--tc:#7c3aed;--tbg:#f5f3ff;--tsh:#ddd6fe;background:var(--tbg);color:var(--tc);box-shadow:0 4px 0 var(--tsh)}
+.tab[data-op=div]{--tc:#0284c7;--tbg:#f0f9ff;--tsh:#bae6fd;background:var(--tbg);color:var(--tc);box-shadow:0 4px 0 var(--tsh)}
+.tab[aria-selected=true]{
+  background:var(--tc);
+  color:#fff;
+  border-color:var(--tc);
+  transform:translateY(-3px);
+  box-shadow:0 6px 14px rgba(0,0,0,.18);
+}
+
+/* Tema dinamis per operasi */
+body[data-theme=add]{--accent:#059669;--accent2:#10b981;--accent-soft:#ecfdf5;--accent-ring:#a7f3d0}
+body[data-theme=sub]{--accent:#e11d48;--accent2:#f43f5e;--accent-soft:#fff1f2;--accent-ring:#fecdd3}
+body[data-theme=mul]{--accent:#7c3aed;--accent2:#8b5cf6;--accent-soft:#f5f3ff;--accent-ring:#ddd6fe}
+body[data-theme=div]{--accent:#0284c7;--accent2:#0ea5e9;--accent-soft:#f0f9ff;--accent-ring:#bae6fd}
+
+/* Kartu Utama */
+.card{
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(10px);
+  border:2px solid #fff;
+  border-radius:24px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 10px 26px rgba(99,102,241,.1);
+  animation:fadeUp .28s ease;
+}
+@keyframes fadeUp{
+  from{opacity:.5;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Input Pecahan A & B */
+.inputs{display:flex;align-items:center;justify-content:center;gap:14px}
+.inputs>div:first-child{
+  background:var(--a-soft);
+  border:2px solid var(--a-ring);
+  border-radius:20px;
+  padding:10px 16px;
+  box-shadow:0 4px 0 var(--a-ring);
+}
+.inputs>div:last-child{
+  background:var(--b-soft);
+  border:2px solid var(--b-ring);
+  border-radius:20px;
+  padding:10px 16px;
+  box-shadow:0 4px 0 var(--b-ring);
+}
+.fin{display:flex;flex-direction:column;align-items:center;width:74px}
+.fin select,.fin input[type=number]{
+  width:74px;
+  text-align:center;
+  text-align-last:center;
+  font-size:1.25rem;
+  font-weight:700;
+  border:2px solid var(--line);
+  border-radius:12px;
+  padding:5px 0;
+  font-family:inherit;
+  background:#fff;
+  cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+}
+.fin select:hover,.fin input[type=number]:hover{transform:scale(1.05)}
+.fin select:focus,.fin input[type=number]:focus{outline:none;box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.fin hr{width:58px;border:0;border-top:3.5px solid currentColor;border-radius:4px;margin:6px 0}
+.fin.A{color:var(--a2)} .fin.A select,.fin.A input[type=number]{border-color:var(--a);color:var(--a2)}
+.fin.B{color:var(--b2)} .fin.B select,.fin.B input[type=number]{border-color:var(--b);color:var(--b2)}
+.opsym{
+  width:50px;height:50px;
+  border-radius:50%;
+  background:var(--accent-soft);
+  border:2.5px solid var(--accent-ring);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.95rem;font-weight:700;
+  color:var(--accent);
+  box-shadow:0 4px 0 var(--accent-ring);
+  flex:none;
+}
+.lbl{font-size:.82rem;font-weight:700;text-align:center;margin-top:5px}
+.inputs>div:first-child .lbl{color:var(--a2)}
+.inputs>div:last-child .lbl{color:var(--b2)}
+
+/* Chip Contoh Soal & Acak */
+.chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px}
+.chip{
+  border:2px solid var(--accent-ring);
+  background:var(--accent-soft);
+  border-radius:999px;
+  padding:5px 14px;
+  font-size:.95rem;
+  font-weight:600;
+  cursor:pointer;
+  font-family:inherit;
+  color:var(--accent);
+  box-shadow:0 2px 0 var(--accent-ring);
+  transition:all .15s ease;
+}
+.chip:hover{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+  transform:translateY(-2px);
+}
+.chip.rnd{
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border-color:#fbbf24;
+  color:#b45309;
+  box-shadow:0 2px 0 #fbbf24;
+}
+.chip.rnd:hover{
+  background:#f59e0b;
+  color:#fff;
+  border-color:#f59e0b;
+}
+.warn{color:#b91c1c;background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:10px 12px;margin-top:12px;font-size:.9rem;display:none}
+
+/* Pecahan Inline & Persamaan */
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 .15em}
+.fr>span:first-child{border-bottom:2.5px solid currentColor;padding:0 .28em 2px}
+.fr>span:last-child{padding:2px .28em 0}
+.eq{text-align:center;font-size:1.65rem;font-weight:700;margin:2px 0 8px;min-height:2.8rem}
+.eq .qm{color:#94a3b8}
+.ca{color:var(--a2);font-weight:700} .cb{color:var(--b2);font-weight:700} .cr{color:var(--r2);font-weight:700}
+
+/* Nomor Langkah */
+.stepnums{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:4px 0 12px}
+.sn{
+  width:36px;height:36px;
+  border-radius:50%;
+  border:2px solid var(--accent-ring);
+  background:#fff;
+  color:var(--accent);
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:.95rem;
+  padding:0;
+  box-shadow:0 2px 0 var(--accent-ring);
+  transition:all .15s ease;
+}
+.sn:hover{transform:translateY(-2px)}
+.sn.done{background:var(--accent-soft)}
+.sn.on{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+  transform:scale(1.12);
+  box-shadow:0 4px 10px rgba(0,0,0,.18);
+}
+
+/* Wadah Kotak SVG & Animasi Kotak */
+#svgbox{
+  background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%);
+  border:2px solid #e2e8f0;
+  border-radius:18px;
+  padding:10px;
+  box-shadow:inset 0 2px 6px rgba(15,23,42,.04);
+}
+@keyframes cellPop{
+  0%{opacity:0;transform:scale(.82)}
+  70%{transform:scale(1.03)}
+  100%{opacity:1;transform:scale(1)}
+}
+#svgbox .cell-anim{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:cellPop .26s ease backwards;
+}
+.steptext{margin-top:12px;font-size:.98rem;min-height:3.2em;color:#334155}
+.note{margin-top:10px;background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:12px;padding:10px 12px;font-size:.9rem;display:none}
+.tally{margin-top:10px;text-align:center;background:linear-gradient(90deg,#fef3c7,#fde68a);border:2px solid #fbbf24;color:#92400e;border-radius:14px;padding:8px 12px;font-size:.96rem;font-weight:600;display:none}
+
+/* Rangkuman Konsep & Cara */
+.recipe{margin-top:12px;background:var(--accent-soft);border:2px solid var(--accent-ring);border-radius:18px;padding:12px 14px;font-size:.94rem;text-align:left}
+.recipe h4{margin:12px 0 5px;font-size:1rem;color:var(--accent)}
+.recipe h4:first-child{margin-top:0}
+.recipe p{margin:0 0 6px}
+.recipe ol{margin:0;padding-left:1.35em}
+.recipe li{margin-bottom:3px}
+.recipe .ex{background:#fff;border:1.5px solid var(--accent-ring);border-radius:12px;padding:10px 12px;line-height:1.95;margin-top:4px}
+
+/* Tombol 3D Lembut */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+button.pri,.nav button{
+  border:0;
+  border-radius:16px;
+  padding:11px 18px;
+  font-size:.96rem;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;
+  box-shadow:0 4px 0 rgba(0,0,0,.18);
+  transition:transform .12s,box-shadow .12s;
+}
+button.pri:hover:not(:disabled),.nav button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,.2)}
+button.pri:active:not(:disabled),.nav button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.nav button.sec,button.sec{
+  background:#f1f5f9;
+  color:#334155;
+  border:2px solid #cbd5e1;
+  border-radius:16px;
+  padding:10px 16px;
+  font-size:.95rem;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  box-shadow:0 4px 0 #cbd5e1;
+}
+.nav button.sec:hover:not(:disabled),button.sec:hover:not(:disabled){background:#e2e8f0;transform:translateY(-2px)}
+.nav button:disabled{opacity:.42;cursor:default;transform:none}
+.cta{margin-top:12px;text-align:center;display:none}
+.cta button{width:100%;padding:13px;font-size:1.02rem}
+
+/* Latihan / Kuis */
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;font-weight:600;color:var(--mut);margin-bottom:8px}
+.pbar{display:flex;gap:6px;margin-bottom:14px}
+.pbar i{flex:1;height:9px;border-radius:999px;background:#e2e8f0;display:block;transition:background .25s}
+.pbar i.cur{background:var(--accent-ring)}
+.pbar i.ans{background:var(--accent)}
+.qtext{font-size:1.35rem;font-weight:700;text-align:center;margin:10px 0 16px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{
+  border:2px solid #e2e8f0;
+  background:#fff;
+  border-radius:18px;
+  padding:13px 10px;
+  font-size:1.2rem;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  color:var(--ink);
+  min-height:66px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 0 #e2e8f0;
+  transition:all .15s ease;
+}
+.opt .lt{
+  font-size:.82rem;font-weight:700;color:var(--mut);
+  background:#f1f5f9;border-radius:50%;
+  width:26px;height:26px;
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+}
+.opt:hover{border-color:var(--accent);transform:translateY(-2px)}
+.opt.sel{
+  border-color:var(--accent);
+  background:var(--accent-soft);
+  color:var(--accent);
+  box-shadow:0 4px 0 var(--accent-ring);
+}
+.opt.sel .lt{background:var(--accent);color:#fff}
+.center{text-align:center}
+.score{font-size:3.3rem;font-weight:700;line-height:1.1;margin:4px 0}
+.badge{font-size:1.4rem;font-weight:700;margin:6px 0}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.small{font-size:.86rem;color:var(--mut)}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);margin:10px 0}
+.evcard{
+  border:2px solid #e2e8f0;
+  border-left:6px solid #e2e8f0;
+  background:#fff;
+  border-radius:16px;
+  padding:12px 14px;
+  margin-top:12px;
+  text-align:left;
+  font-size:.94rem;
+}
+.evcard.ok{border-left-color:var(--r);background:#f0fdf4}
+.evcard.no{border-left-color:var(--bad);background:#fef2f2}
+.evh{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:4px}
+.evcard.ok .evh span{color:var(--r2);font-weight:700}
+.evcard.no .evh span{color:var(--bad);font-weight:700}
+.evq{font-size:1.15rem;font-weight:700;margin:4px 0}
+.expl{margin-top:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px 10px;line-height:1.75}
+
+/* Kalkulator Pecahan */
+.calc-ops{display:flex;justify-content:center;align-items:center;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+.cop{
+  width:46px;height:46px;
+  border-radius:15px;
+  border:2px solid var(--accent-ring);
+  background:#fff;
+  color:var(--accent);
+  font-size:1.45rem;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 3px 0 var(--accent-ring);
+  transition:all .15s ease;
+}
+.cop:hover{transform:translateY(-2px)}
+.cop[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.16)}
+.swap-btn{
+  border:2px solid #cbd5e1;
+  background:#f8fafc;
+  color:#475569;
+  border-radius:999px;
+  padding:6px 12px;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  margin-left:4px;
+}
+.swap-btn:hover{background:#e2e8f0}
+.calc-res{
+  margin-top:14px;
+  background:linear-gradient(135deg,#ecfdf5 0%,#f0f9ff 100%);
+  border:2px solid #a7f3d0;
+  border-radius:18px;
+  padding:14px;
+  text-align:center;
+}
+.calc-steps{
+  margin-top:12px;
+  background:#fff;
+  border:1.5px solid #e2e8f0;
+  border-radius:14px;
+  padding:10px 12px;
+  text-align:left;
+  font-size:.94rem;
+  line-height:1.85;
+}
+
+
+/* Game Operasi */
+.lvgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0 6px}
+.lv{border:2px solid var(--accent-ring);background:#fff;border-radius:16px;padding:8px 0;font-family:inherit;font-weight:700;color:var(--accent);cursor:pointer;box-shadow:0 3px 0 var(--accent-ring);display:flex;flex-direction:column;align-items:center;gap:0;transition:transform .15s}
+.lv b{font-size:1.3rem;line-height:1.2}
+.lv span{font-size:.95rem;line-height:1.2}
+.lv:hover:not(:disabled){transform:translateY(-2px)}
+.lv.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lv.done{background:var(--accent-soft)}
+.lv:disabled{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;box-shadow:0 3px 0 #e2e8f0;cursor:not-allowed}
+.gsw{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0}
+.gsw button{border:2px solid var(--accent-ring);background:#fff;color:var(--accent);border-radius:14px;padding:9px 4px;font-family:inherit;font-weight:700;font-size:.95rem;cursor:pointer;box-shadow:0 3px 0 var(--accent-ring)}
+.gsw button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.gboard{background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);border:2px solid #e2e8f0;border-radius:18px;padding:10px;box-shadow:inset 0 2px 6px rgba(15,23,42,.04)}
+.gpic{margin:4px 0 6px}
+.gl{font-weight:700;font-size:.92rem;margin-bottom:4px}
+.gopsym{text-align:center;font-size:1.9rem;font-weight:700;color:var(--accent);line-height:1;margin:2px 0}
+.gfb{border-radius:14px;padding:10px 12px;margin:10px 0;font-size:.94rem;border:2px solid #e2e8f0;border-left-width:6px}
+.gfb.ok{background:#f0fdf4;border-color:var(--r)}
+.gfb.no{background:#fef2f2;border-color:var(--bad)}
+.gconv{background:var(--accent-soft);border:2px solid var(--accent-ring);border-radius:14px;padding:8px 12px;line-height:2;font-size:.95rem;margin-bottom:8px}
+.gstat{text-align:center;font-weight:700;margin-top:8px;color:var(--r2);font-size:1.02rem}
+.gsmall{background:none;border:0;color:var(--mut);font-family:inherit;font-size:.82rem;text-decoration:underline;cursor:pointer;margin-top:10px}
+
+.fin.R{color:var(--r2)} .fin.R input[type=number]{border-color:var(--r);color:var(--r2);width:104px;font-size:1.1rem} .fin.R{width:104px} .fin.R hr{width:88px}
+@keyframes quake{0%,100%{transform:translate(0,0) rotate(0)}10%{transform:translate(-10px,6px) rotate(-1.2deg)}20%{transform:translate(9px,-7px) rotate(1deg)}30%{transform:translate(-8px,-5px) rotate(-.9deg)}40%{transform:translate(8px,7px) rotate(1deg)}50%{transform:translate(-7px,4px) rotate(-1deg)}60%{transform:translate(6px,-6px)}70%{transform:translate(-5px,5px)}80%{transform:translate(4px,-3px)}90%{transform:translate(-2px,2px)}}
+.quake{animation:quake .65s ease-in-out}
+#flash{position:fixed;inset:0;background:radial-gradient(circle,rgba(255,140,40,.6),rgba(239,68,68,.35) 55%,transparent 78%);opacity:0;pointer-events:none;z-index:49}
+#flash.on{animation:flashA .6s ease-out}
+@keyframes flashA{0%{opacity:1}100%{opacity:0}}
+.boomemoji{position:fixed;left:50%;top:40%;font-size:6rem;z-index:51;pointer-events:none;animation:boomE .8s ease-out forwards}
+@keyframes boomE{0%{transform:translate(-50%,-50%) scale(.2);opacity:1}40%{transform:translate(-50%,-50%) scale(1.5);opacity:1}100%{transform:translate(-50%,-50%) scale(2.3);opacity:0}}
+@media (prefers-reduced-motion:reduce){.quake{animation:none}}
+.foot{color:#64748b;font-size:.86rem;font-weight:500;text-align:center;margin-top:22px}
+
+@media (max-width:440px){
+  .inputs{gap:8px}
+  .inputs>div:first-child,.inputs>div:last-child{padding:8px 10px}
+  .fin,.fin select,.fin input[type=number]{width:66px}
+  .opsym{width:42px;height:42px;font-size:1.6rem}
+  .opts{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body data-theme="div">
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="bg" aria-hidden="true">
+  <span style="left:5%;top:6%;font-size:72px">½</span><span style="left:76%;top:9%;font-size:60px;animation-delay:-3s">⅓</span>
+  <span style="left:42%;top:20%;font-size:48px;animation-delay:-6s">+</span><span style="left:12%;top:38%;font-size:62px;animation-delay:-2s">¾</span>
+  <span style="left:84%;top:42%;font-size:66px;animation-delay:-8s">÷</span><span style="left:30%;top:58%;font-size:54px;animation-delay:-5s">×</span>
+  <span style="left:68%;top:66%;font-size:68px;animation-delay:-9s">¼</span><span style="left:8%;top:78%;font-size:58px;animation-delay:-4s">−</span>
+  <span style="left:50%;top:86%;font-size:62px;animation-delay:-7s">⅔</span><span style="left:88%;top:88%;font-size:48px;animation-delay:-1s">+</span>
+</div>
+
+<div class="wrap">
+  <button class="snd-btn" id="sndbtn" aria-label="Suara efek aktif" title="Suara Efek">🔊</button>
+  <div class="hero">
+    <div class="logo">Jeje<b>Cahan</b></div>
+    <p class="tagline">Ayo belajar apa di balik operasi pecahan, dan ukur kemampuanmu!</p>
+  </div>
+
+  <div class="mode" id="mode">
+    <button data-m="learn" aria-selected="true"><i>📖</i>Belajar</button>
+    <button data-m="quiz" aria-selected="false"><i>✏️</i>Latihan</button>
+    <button data-m="calc" aria-selected="false"><i>🧮</i>Kalkulator</button>
+    <button data-m="game" aria-selected="false"><i>🎮</i>Game</button>
+  </div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div id="learn">
+    <div class="card">
+      <div class="inputs">
+        <div><div class="fin A"><select id="an" aria-label="Pembilang A"></select><hr><select id="ad" aria-label="Penyebut A"></select></div><div class="lbl">Pecahan A</div></div>
+        <div class="opsym" id="opsym">÷</div>
+        <div><div class="fin B"><select id="bn" aria-label="Pembilang B"></select><hr><select id="bd" aria-label="Penyebut B"></select></div><div class="lbl">Pecahan B</div></div>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="warn" id="warn"></div>
+    </div>
+
+    <div class="card" id="stage">
+      <div class="eq" id="eq"></div>
+      <div class="stepnums" id="stepnums"></div>
+      <div id="svgbox"></div>
+      <div class="tally" id="tally"></div>
+      <div class="steptext" id="steptext" aria-live="polite"></div>
+      <div class="note" id="note"></div>
+      <div class="recipe" id="recipe" style="display:none"></div>
+      <div class="nav">
+        <button class="sec" id="prev">◀ Mundur</button>
+        <button id="next">Lanjut ▶</button>
+      </div>
+      <div class="cta" id="cta"><button class="pri" id="ctabtn">Lanjut ke Latihan ✏️</button><button class="sec" id="ctagame" style="display:none;margin-top:10px">🎮 Main Game</button></div>
+    </div>
+  </div>
+
+  <div id="quiz" class="card" style="display:none"></div>
+  <div id="calc" class="card" style="display:none"></div>
+  <div id="game" class="card" style="display:none"></div>
+
+  <p class="foot">JejeCahan · Belajar pecahan lewat kotak-kotak</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const lcm=(a,b)=>Math.abs(a*b)/(gcd(a,b)||1);
+const fr=(n,d)=>d===1?`<span class="int">${n}</span>`:`<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const ft=(n,d)=>d===1?`${n}`:`${n}/${d}`;
+
+function res(n,d){
+  const neg=n<0; n=Math.abs(n); const g=gcd(n,d)||1; const N=n/g, D=d/g, sg=neg?'−':'';
+  if(N===0) return '0';
+  if(D===1) return sg+N;
+  let s=sg+fr(N,D);
+  if(N>D){ const w=Math.floor(N/D), rm=N%D; s+=` = ${sg}${w}${rm?fr(rm,D):''}`; }
+  return s;
+}
+function simp(n,d){
+  const g=gcd(n,d)||1;
+  if(g===1) return n>d?res(n,d):fr(n,d);
+  return `${fr(n,d)} = ${res(n,d)}`;
+}
+function optHTML(v){
+  const g=gcd(v.n,v.d)||1, N=v.n/g, D=v.d/g;
+  if(D===1) return `${N}`;
+  if(N>D){ const w=Math.floor(N/D), rm=N%D; return `${w}${rm?' '+fr(rm,D):''}`; }
+  return fr(N,D);
+}
+
+/* ---------- efek suara Web Audio lembut ---------- */
+let soundOn=true, audioCtx=null;
+function beep(type='pop'){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const now=audioCtx.currentTime;
+    const playTone=(freq,dur,delay=0,wave='sine',gainVal=0.07)=>{
+      const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+      osc.type=wave; osc.frequency.setValueAtTime(freq,now+delay);
+      gain.gain.setValueAtTime(0.001,now+delay);
+      gain.gain.exponentialRampToValueAtTime(gainVal,now+delay+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+delay+dur);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now+delay); osc.stop(now+delay+dur+0.02);
+    };
+    if(type==='pop') playTone(520,0.09,0,'sine',0.06);
+    else if(type==='step') playTone(620,0.11,0,'triangle',0.06);
+    else if(type==='win'){ playTone(523.25,0.14,0,'triangle',0.08); playTone(659.25,0.14,0.1,'triangle',0.08); playTone(783.99,0.24,0.2,'triangle',0.09); }
+    else if(type==='try'){ playTone(380,0.15,0,'sine',0.06); playTone(320,0.2,0.12,'sine',0.06); }
+    else if(type==='boom'){ playTone(120,0.4,0,'sawtooth',0.12); playTone(70,0.5,0.05,'square',0.1); playTone(200,0.2,0.02,'sawtooth',0.08); }
+  }catch(_){}
+}
+$('sndbtn').onclick=()=>{
+  soundOn=!soundOn;
+  $('sndbtn').textContent=soundOn?'🔊':'🔇';
+  $('sndbtn').setAttribute('aria-label',soundOn?'Suara efek aktif':'Suara efek nonaktif');
+  if(soundOn) beep('pop');
+};
+
+/* ---------- konfeti perayaan ---------- */
+function launchConfetti(){
+  const cv=$('confetti'), ctx=cv.getContext('2d');
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const cols=['#fb7185','#38bdf8','#10b981','#fbbf24','#a78bfa','#f43f5e'];
+  const pieces=Array.from({length:75},()=>({
+    x:Math.random()*cv.width, y:-20-Math.random()*140,
+    w:8+Math.random()*6, h:5+Math.random()*5,
+    vx:(Math.random()-0.5)*3, vy:2.5+Math.random()*3.5,
+    rot:Math.random()*Math.PI*2, vr:(Math.random()-0.5)*0.15,
+    c:cols[Math.floor(Math.random()*cols.length)]
+  }));
+  let frame=0;
+  function tick(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(const p of pieces){
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    }
+    if(++frame<145) requestAnimationFrame(tick);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  }
+  requestAnimationFrame(tick);
+}
+
+const OPS={add:{sym:'+',name:'Penjumlahan'},sub:{sym:'−',name:'Pengurangan'},mul:{sym:'×',name:'Perkalian'},div:{sym:'÷',name:'Pembagian'}};
+const ORDER=['add','sub','mul','div'];
+const DEN=[1,2,3,4,6,12];
+const PRESETS={
+  add:[[1,3,1,2],[1,4,1,3],[1,2,3,4],[2,3,1,6]],
+  sub:[[3,4,1,3],[5,6,1,2],[1,2,1,4]],
+  mul:[[1,2,1,3],[2,3,3,4],[3,4,2,3],[1,3,1,2]],
+  div:[[1,2,1,4],[1,3,1,2],[1,2,1,3],[1,4,1,6],[1,6,1,12]]
+};
+const S={mode:'learn',op:'div',an:1,ad:2,bn:1,bd:4,step:0};
+const C={A:'#fb7185',A2:'#e11d48',B:'#38bdf8',B2:'#0284c7',R:'#10b981'};
+const L=12, COLS=6;
+
+/* ---------- gambar kotak (SVG): 1 utuh = persegi panjang 6 x 2 ---------- */
+const SW=340,PX=8,IW=SW-2*PX;
+function band(y,b){
+  const cw=IW/COLS, ch=cw, wh=2*ch, gap=12, th=22;
+  const W=Math.max(1,Math.ceil((b.cells||0)/L));
+  let s=`<text x="${PX}" y="${y+14}" font-size="12.5" font-weight="700" font-family="Fredoka, sans-serif" fill="#334155">${b.title}</text>`;
+  for(let w=0;w<W;w++){
+    const oy=y+th+w*(wh+gap);
+    s+=`<rect x="${PX}" y="${oy}" width="${IW}" height="${wh}" fill="#f1f5f9" rx="9"/>`;
+    for(let j=0;j<L;j++){
+      const i=w*L+j, r=Math.floor(j/COLS), c=j%COLS, x=PX+c*cw, yy=oy+r*ch;
+      const st=b.fn?b.fn(i):null;
+      const delay=(j*0.015).toFixed(3);
+      s+=`<g class="cell-anim" style="animation-delay:${delay}s">`;
+      s+=`<rect x="${x+1.5}" y="${yy+1.5}" width="${cw-3}" height="${ch-3}" rx="6" fill="${st&&st.fill?st.fill:'#e2e8f0'}"/>`;
+      if(st&&st.hatch) s+=`<rect x="${x+1.5}" y="${yy+1.5}" width="${cw-3}" height="${ch-3}" rx="6" fill="url(#hatch)"/>`;
+      if(st&&st.text) s+=`<text x="${x+cw/2}" y="${yy+ch/2+6}" text-anchor="middle" font-size="17" font-weight="700" font-family="Fredoka, sans-serif" fill="${st.tc||'#fff'}">${st.text}</text>`;
+      if(st&&st.dash) s+=`<rect x="${x+3}" y="${yy+3}" width="${cw-6}" height="${ch-6}" rx="5" fill="none" stroke="${typeof st.dash==='string'?st.dash:'#0284c7'}" stroke-width="2.5" stroke-dasharray="4 3"/>`;
+      s+=`</g>`;
+    }
+    if(b.ticks){
+      for(const t of b.ticks){ if(t.d<2) continue;
+        for(let m=1;m<t.d;m++){
+          const p=m*L/t.d, r=Math.floor(p/COLS), c=p%COLS, yy=oy+r*ch;
+          const dash=t.dash?' stroke-dasharray="5 3"':'';
+          if(c===0) s+=`<line x1="${PX+2}" x2="${PX+IW-2}" y1="${yy}" y2="${yy}" stroke="${t.color}" stroke-width="3" stroke-linecap="round"${dash}/>`;
+          else s+=`<line x1="${PX+c*cw}" x2="${PX+c*cw}" y1="${yy+2}" y2="${yy+ch-2}" stroke="${t.color}" stroke-width="3" stroke-linecap="round"${dash}/>`;
+        }
+      }
+    }
+    s+=`<rect x="${PX}" y="${oy}" width="${IW}" height="${wh}" fill="none" stroke="#64748b" stroke-width="2.2" rx="9"/>`;
+  }
+  if(b.groups){
+    for(const g of b.groups){
+      const w=Math.floor(g.s/L), j=g.s%L, r=Math.floor(j/COLS), c=j%COLS;
+      const oy=y+th+w*(wh+gap), yy=oy+r*ch, x=PX+c*cw;
+      if(c>0) s+=`<line x1="${x}" x2="${x}" y1="${yy+2}" y2="${yy+ch-2}" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>`;
+      else if(r>0) s+=`<line x1="${PX+2}" x2="${PX+IW-2}" y1="${yy}" y2="${yy}" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>`;
+      if(g.label){
+        const span=Math.min(g.len,COLS-c), cx=x+span*cw/2;
+        s+=`<text x="${cx}" y="${yy+ch/2+5}" text-anchor="middle" font-size="15" font-weight="700" font-family="Fredoka, sans-serif" fill="${g.tc||'#fff'}">${g.label}</text>`;
+      }
+    }
+  }
+  return {svg:s,h:th+W*wh+(W-1)*gap+14};
+}
+function compose(bands){
+  let y=4,out='';
+  for(const b of bands){ const r=band(y,b); out+=r.svg; y+=r.h; }
+  return `<svg viewBox="0 0 ${SW} ${y}" width="100%" role="img" aria-label="Model kotak pecahan"><defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#e11d48" stroke-width="2.5"/></pattern></defs>${out}</svg>`;
+}
+
+const GEN={
+  add:{konsep:`Menjumlahkan pecahan = <b>menggabungkan kotak</b>. Kotak hanya bisa digabung kalau ukurannya sama, jadi tiap pecahan diubah dulu menjadi kotak kecil (per 12).`,
+    cara:[`Ubah tiap pecahan menjadi kotak: <b>12 ÷ penyebut × pembilang</b>.`,`<b>Jumlahkan</b> banyak kotaknya.`,`Tulis <b>jumlah kotak / 12</b>, lalu sederhanakan. (Lebih dari 12 kotak berarti lebih dari 1 utuh.)`],
+    cepat:`Samakan penyebut menjadi 12, lalu jumlahkan pembilangnya.`},
+  sub:{konsep:`Mengurangkan pecahan = <b>mengambil sebagian kotak</b> dari A. Syaratnya, A lebih besar atau sama dengan B.`,
+    cara:[`Ubah tiap pecahan menjadi kotak: <b>12 ÷ penyebut × pembilang</b>.`,`<b>Kurangkan</b> banyak kotak A dengan kotak B.`,`Tulis <b>sisa kotak / 12</b>, lalu sederhanakan.`],
+    cepat:`Samakan penyebut menjadi 12, lalu kurangkan pembilangnya.`},
+  mul:{konsep:`A × B artinya <b>“B bagian dari A”</b>: A dibagi rata sesuai penyebut B, lalu diambil sebanyak pembilang B.`,
+    cara:[`Ubah A menjadi kotak: <b>12 ÷ penyebut A × pembilang A</b>.`,`Bagi kotak A menjadi <b>(penyebut B) bagian</b> sama besar.`,`Ambil <b>(pembilang B) bagian</b> dan hitung kotaknya.`,`Tulis <b>kotak yang diambil / 12</b>, lalu sederhanakan.`],
+    cepat:`Pembilang × pembilang, penyebut × penyebut.`},
+  div:{konsep:`A ÷ B artinya <b>“ada berapa B di dalam A?”</b>, yaitu berapa kali kelompok B bisa diambil dari A.`,
+    cara:[`Ubah A dan B menjadi kotak: <b>12 ÷ penyebut</b>.`,`Hitung <b>kotak A ÷ kotak B</b>: berapa kali kelompok B muat di A.`,`Tulis hasilnya <b>kotak A / kotak B</b>, lalu sederhanakan (bisa lebih dari 1 atau kurang dari 1).`],
+    cepat:`Balik pecahan B, lalu kalikan: A ÷ B = A × kebalikan B.`}
+};
+const genHTML=op=>`<h4>📌 Konsep</h4><p>${GEN[op].konsep}</p><h4>🧭 Cara (memakai 12 kotak)</h4><ol>${GEN[op].cara.map(x=>`<li>${x}</li>`).join('')}</ol><h4>⚡ Cara cepat (tanpa gambar)</h4><p>${GEN[op].cepat}</p>`;
+function worked(op,an,ad,bn,bd){
+  const tA=an*L/ad, tB=bn*L/bd;
+  const l1=`<b>Langkah 1, ubah ke kotak:</b> ${fr(an,ad)} = ${L} ÷ ${ad} × ${an} = <b>${tA} kotak</b>`;
+  const l1b=l1+`; ${fr(bn,bd)} = ${L} ÷ ${bd} × ${bn} = <b>${tB} kotak</b>.`;
+  if(op==='add'){ const T=tA+tB; return {lines:[l1b,`<b>Langkah 2, jumlahkan:</b> ${tA} + ${tB} = <b>${T} kotak</b>.`,`<b>Langkah 3, tulis per ${L} lalu sederhanakan:</b> ${simp(T,L)}.`],
+    quick:`${fr(an,ad)} = ${fr(tA,L)}, ${fr(bn,bd)} = ${fr(tB,L)} → ${tA} + ${tB} = ${T} → ${simp(T,L)}`}; }
+  if(op==='sub'){ const R=tA-tB; return {lines:[l1b,`<b>Langkah 2, kurangkan:</b> ${tA} − ${tB} = <b>${R} kotak</b>.`,`<b>Langkah 3, tulis per ${L} lalu sederhanakan:</b> ${simp(R,L)}.`],
+    quick:`${fr(an,ad)} = ${fr(tA,L)}, ${fr(bn,bd)} = ${fr(tB,L)} → ${tA} − ${tB} = ${R} → ${simp(R,L)}`}; }
+  if(op==='mul'){ const g=tA/bd, R=bn*g; return {lines:[l1+`.`,`<b>Langkah 2, bagi menjadi ${bd} bagian:</b> ${tA} ÷ ${bd} = <b>${g} kotak</b> tiap bagian.`,`<b>Langkah 3, ambil ${bn} bagian:</b> ${bn} × ${g} = <b>${R} kotak</b>.`,`<b>Langkah 4, tulis per ${L} lalu sederhanakan:</b> ${simp(R,L)}.`],
+    quick:`${an} × ${bn} = ${an*bn} dan ${ad} × ${bd} = ${ad*bd} → ${simp(an*bn,ad*bd)}`}; }
+  return {lines:[l1b,`<b>Langkah 2, berapa kali B muat di A:</b> ${tA} ÷ ${tB} = ${fr(tA,tB)}.`,`<b>Langkah 3, sederhanakan:</b> ${res(tA,tB)}.`],
+    quick:`${fr(an,ad)} ÷ ${fr(bn,bd)} = ${fr(an,ad)} × ${fr(bd,bn)} = ${simp(an*bd,ad*bn)}`};
+}
+
+/* ---------- membangun langkah belajar ---------- */
+function validate(){
+  const {op,an,ad,bn,bd}=S, tA=an*L/ad, tB=bn*L/bd;
+  if(op==='div'&&(an!==1||bn!==1)) return 'Pembagian hanya memakai pecahan 1/n (pembilang 1).';
+  if(op==='sub'&&tA<tB) return 'Untuk pengurangan, A harus lebih besar atau sama dengan B.';
+  if(op==='mul'&&tA%bd!==0) return 'Pasangan ini tidak bisa digambar dengan 12 kotak (hasilnya butuh kotak yang lebih kecil). Pilih pasangan lain.';
+  return null;
+}
+function build(){
+  const {op,an,ad,bn,bd}=S;
+  const tA=an*L/ad, tB=bn*L/bd;
+  const A=`<span class="ca">${fr(an,ad)}</span>`, B=`<span class="cb">${fr(bn,bd)}</span>`;
+  const tickA={d:ad,color:C.A2}, tickB={d:bd,color:C.B2,dash:true};
+  const bandA={title:`A = ${ft(an,ad)}  →  ${tA} kotak (merah muda)`,cells:tA,fn:i=>i<tA?{fill:C.A}:null,ticks:[tickA]};
+  const bandB={title:`B = ${ft(bn,bd)}  →  ${tB} kotak (biru langit)`,cells:tB,fn:i=>i<tB?{fill:C.B}:null,ticks:[tickB]};
+  const intro=`${A} = <b>${tA} kotak</b> dan ${B} = <b>${tB} kotak</b>, digambar bersamaan pada ukuran 1 utuh yang sama (12 kotak). `;
+  let steps=[], rn, rd;
+
+  if(op==='add'){
+    const T=tA+tB; rn=T; rd=L;
+    const bandAB={title:`A + B = ${tA} + ${tB} = ${T} kotak`,cells:T,fn:i=>i<tA?{fill:C.A}:i<T?{fill:C.B}:null};
+    const bandR={title:`Hasil: ${T} dari ${L} kotak`,cells:T,fn:i=>i<T?{fill:C.R}:null};
+    steps=[
+      {t:intro+`Kedua pecahan langsung digambar bersamaan.`,bands:[bandA,bandB]},
+      {t:`Gabungkan: sambung kotak B tepat setelah kotak A. Totalnya ${tA} + ${tB} = <b>${T} kotak</b>.`+(T>L?` Karena lebih dari ${L} kotak, kita butuh persegi panjang kedua (lebih dari 1 utuh).`:''),bands:[bandAB]},
+      {t:`${T} kotak dari ${L} kotak per utuh → <span class="cr">${simp(T,L)}</span>.`,bands:[bandR]}];
+  }
+  if(op==='sub'){
+    const rem=tA-tB; rn=rem; rd=L;
+    const bandCut={title:`Ambil ${tB} kotak dari A`,cells:tA,fn:i=>i<rem?{fill:C.A}:i<tA?{fill:'#fecdd3',hatch:true}:null};
+    const bandR={title:`Sisa: ${tA} − ${tB} = ${rem} kotak`,cells:tA,fn:i=>i<rem?{fill:C.R}:i<tA?{fill:'#fecdd3',hatch:true}:null};
+    steps=[
+      {t:intro+`Kedua pecahan langsung digambar bersamaan. Kita akan mengambil B dari A.`,bands:[bandA,bandB]},
+      {t:`Ambil (hilangkan) B sebanyak <b>${tB} kotak</b> dari ujung A. Kotak yang diambil diberi garis arsir.`,bands:[bandCut]},
+      {t:`Kotak yang tersisa: ${tA} − ${tB} = <b>${rem} kotak</b> dari ${L} → <span class="cr">${simp(rem,L)}</span>.`,bands:[bandR]}];
+  }
+  if(op==='mul'){
+    const g=tA/bd, R=bn*g; rn=R; rd=L;
+    const groups=Array.from({length:bd},(_,k)=>({s:k*g,len:g}));
+    const split={title:`A dibagi ${bd} bagian sama besar (tiap bagian ${g} kotak)`,cells:tA,groups,
+      fn:i=>{ if(i>=tA) return null; const gi=Math.floor(i/g); return {fill:gi%2?C.A2:C.A,text:String(gi+1)}; }};
+    const pick={title:`Ambil ${bn} bagian  →  ${bn} × ${g} = ${R} kotak`,cells:tA,groups,
+      fn:i=>{ if(i>=tA) return null; const gi=Math.floor(i/g); return gi<bn?{fill:'#8b5cf6',text:String(gi+1)}:{fill:'#ffe4e6',text:String(gi+1),tc:'#fda4af'}; }};
+    const bandR={title:`Hasil: ${R} dari ${L} kotak`,cells:R,fn:i=>i<R?{fill:C.R}:null};
+    steps=[
+      {t:intro+`Perkalian ${A} × ${B} berarti “${B} bagian dari ${A}”.`,bands:[bandA,bandB]},
+      {t:`${B} punya penyebut ${bd}, jadi bagi ${A} (${tA} kotak) menjadi <b>${bd} bagian sama besar</b>: ${tA} ÷ ${bd} = <b>${g} kotak</b> tiap bagian. (Garis tebal = batas bagian, angka = nomor bagian.)`,bands:[split]},
+      {t:`Pembilang ${bn} artinya <b>ambil ${bn} bagian</b> (warna ungu): ${bn} × ${g} = <b>${R} kotak</b>.`,bands:[pick]},
+      {t:`${R} kotak dari ${L} kotak per utuh → <span class="cr">${simp(R,L)}</span>.`,bands:[bandR]}];
+  }
+  if(op==='div'){
+    const q=Math.floor(tA/tB), r=tA%tB; rn=tA; rd=tB;
+    const PAL=['#10b981','#8b5cf6','#f43f5e','#f59e0b','#06b6d4','#84cc16'];
+    const showPartial=(r>0||q===0);
+    const taken=(k,partial)=>({
+      title: partial?(q===0?`A hanya ${tA} kotak, B butuh ${tB} kotak`:`Sisa ${r} kotak, belum cukup untuk 1 B penuh (${tB} kotak)`):`Setelah mengambil ${k} kali B: sisa ${tA-k*tB} kotak`,
+      cells:Math.max(tA,partial?(q+1)*tB:0),
+      fn:i=>{ const gi=Math.floor(i/tB);
+        if(i<k*tB) return {fill:PAL[gi%6],text:String(gi+1)};
+        if(i<tA) return partial?{fill:'#fde68a'}:{fill:C.A};
+        if(partial&&gi===q) return {dash:C.B2};
+        return null; }});
+    const part=r>0?`${ft(r,tB)}${gcd(r,tB)>1?' = '+res(r,tB):''}`:'';
+    steps.push({t:intro+`Pertanyaannya: <b>ada berapa “${B}” (${tB} kotak) di dalam ${A} (${tA} kotak)?</b> Artinya, berapa kali kelompok ${tB} kotak bisa diambil dari ${tA} kotak.`,bands:[bandA,bandB]});
+    if(q<=4){
+      for(let k=1;k<=q;k++) steps.push({
+        t:(k===1?`Ambil <b>1 kelompok B</b> (${tB} kotak) dari A. Kotak yang diambil diberi warna dan nomor.`:`Ambil <b>1 kelompok B lagi</b> (${tB} kotak).`)+` Sisa A: ${tA} − ${k*tB} = <b>${tA-k*tB} kotak</b>.`,
+        tally:`Diambil: <b>${k}</b> kali B &nbsp;·&nbsp; Sisa: <b>${tA-k*tB}</b> kotak`,
+        bands:[bandB,taken(k,false)]});
+    } else {
+      steps.push({t:`Ambil kelompok B (${tB} kotak) berulang-ulang dari A sampai tidak cukup lagi. Ternyata bisa diambil <b>${q} kali</b>, sisa ${r} kotak.`,
+        tally:`Diambil: <b>${q}</b> kali B &nbsp;·&nbsp; Sisa: <b>${r}</b> kotak`,bands:[bandB,taken(q,false)]});
+    }
+    if(showPartial) steps.push({
+      t:(q===0
+        ? `A hanya ${tA} kotak, padahal 1 kelompok B butuh ${tB} kotak. Jadi A belum bisa mengambil 1 B penuh: ia hanya mengisi <b>${tA} dari ${tB}</b> kotak, yaitu <b>${ft(tA,tB)}</b>${gcd(tA,tB)>1?' = '+res(tA,tB):''} kelompok. (Kotak putus-putus = bagian B yang belum terisi.)`
+        : `Sisa ${r} kotak tidak cukup untuk 1 kelompok B penuh (${tB} kotak). Sisa itu mengisi ${r} dari ${tB} kotak, yaitu <b>${part}</b> kelompok. (Kotak putus-putus = bagian B yang belum terisi.)`),
+      tally:`Diambil: <b>${q}</b> kali B penuh + <b>${q===0?ft(tA,tB):ft(r,tB)}</b> kelompok`,
+      bands:[bandB,taken(q,true)]});
+    steps.push({
+      t:`Jadi di dalam ${A} ada `+(q>0?`${q}`:'')+(q>0&&r>0?' + ':'')+(r>0?ft(r,tB):(q===0?ft(tA,tB):''))+` kelompok ${B}. Hitungan kotak: ${tA} ÷ ${tB} → ${A} ÷ ${B} = <span class="cr">${res(tA,tB)}</span>.`,
+      bands:[bandB,taken(q,showPartial)]});
+  }
+  const mkSplit=(n,d,cols)=>{ const u=L/d;
+    return {title:d===1?`1 utuh = ${L} kotak (tidak perlu dibagi)`:`${ft(n,d)}: ${L} ÷ ${d} = ${u} kotak tiap bagian`,cells:L,
+      groups:Array.from({length:d},(_,k)=>({s:k*u,len:u})),
+      fn:i=>{ const gi=Math.floor(i/u); return gi<n?{fill:gi%2?cols[1]:cols[0],text:String(gi+1)}:{fill:'#e2e8f0',text:String(gi+1),tc:'#94a3b8'}; }}; };
+  const partTxt=(n,d,F)=>d===1?`${F} = 1 utuh = <b>${L} kotak</b> (tidak perlu dibagi).`:`${F}: bagi ${L} kotak menjadi <b>${d} bagian sama besar</b> → tiap bagian ${L/d} kotak. Ambil ${n} bagian = <b>${n*L/d} kotak</b>.`;
+  steps.unshift({t:`<b>Dari mana kotaknya?</b> Satu utuh = persegi panjang 6 × 2 = <b>${L} kotak kecil</b>. `+partTxt(an,ad,A)+' '+partTxt(bn,bd,B)+` (Angka = nomor bagian; bagian abu-abu tidak diambil.)`,
+    bands:[mkSplit(an,ad,[C.A,C.A2]),mkSplit(bn,bd,[C.B,C.B2])]});
+  const resultIdx=steps.length-1;
+  const w=worked(op,an,ad,bn,bd);
+  steps.push({t:`<b>Rangkuman konsep dan cara.</b> Cara ini bisa kamu pakai untuk mengerjakan soal latihan.`,bands:steps[steps.length-1].bands,
+    recipe:genHTML(op)+`<h4>✍️ Contoh dengan soal ini: ${fr(an,ad)} ${OPS[op].sym} ${fr(bn,bd)}</h4><div class="ex">${w.lines.join('<br>')}<br><b>Cara cepat:</b> ${w.quick}</div>`});
+  return {steps,rn,rd,resultIdx};
+}
+
+/* ---------- tampilan belajar ---------- */
+function render(){
+  const err=validate();
+  const warn=$('warn'), stage=$('stage');
+  if(err){
+    warn.textContent=err; warn.style.display='block'; stage.style.display='none'; return;
+  }
+  warn.style.display='none'; stage.style.display='block';
+  const bd=build();
+  const last=bd.steps.length-1;
+  if(S.step>last) S.step=last;
+  const st=bd.steps[S.step];
+  $('eq').innerHTML=`<span class="ca">${fr(S.an,S.ad)}</span> ${OPS[S.op].sym} <span class="cb">${fr(S.bn,S.bd)}</span> = `+(S.step>=bd.resultIdx?`<span class="cr">${res(bd.rn,bd.rd)}</span>`:'<span class="qm">?</span>');
+  $('svgbox').innerHTML=compose(st.bands);
+  $('steptext').innerHTML=st.t;
+  const ty=$('tally'); if(st.tally){ty.innerHTML=st.tally;ty.style.display='block';} else ty.style.display='none';
+  const rc=$('recipe'); if(st.recipe){rc.innerHTML=st.recipe;rc.style.display='block';} else rc.style.display='none';
+  const nt=$('note'); if(st.note){nt.innerHTML=st.note;nt.style.display='block';} else nt.style.display='none';
+  $('stepnums').innerHTML=bd.steps.map((_,i)=>`<button class="sn${i===S.step?' on':(i<S.step?' done':'')}" data-s="${i}" aria-label="Langkah ${i+1}">${i+1}</button>`).join('');
+  $('prev').disabled=S.step===0;
+  $('next').textContent=S.step===last?'Ulangi ↺':'Lanjut ▶';
+  const cta=$('cta'); cta.style.display=S.step===last?'block':'none';
+  $('ctabtn').textContent=`Lanjut ke Latihan ${OPS[S.op].name} ✏️`;
+  $('ctagame').style.display='block';
+}
+function fillNum(id,d,val,only1){
+  const el=$(id);
+  el.innerHTML=Array.from({length:only1?1:d},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  el.value=String(Math.min(val,d));
+}
+function syncInputs(){
+  const div=S.op==='div', dens=div?DEN.filter(d=>d>1):DEN;
+  for(const id of ['ad','bd']) $(id).innerHTML=dens.map(d=>`<option value="${d}">${d}</option>`).join('');
+  $('ad').value=S.ad; fillNum('an',S.ad,S.an,div); S.an=+$('an').value;
+  $('bd').value=S.bd; fillNum('bn',S.bd,S.bn,div); S.bn=+$('bn').value;
+  $('an').disabled=$('bn').disabled=div;
+}
+function setPreset(p){ [S.an,S.ad,S.bn,S.bd]=p; S.step=0; syncInputs(); render(); }
+function pickRandomValid(){
+  const op=S.op, validPairs=[];
+  const dens=op==='div'?DEN.filter(d=>d>1):DEN;
+  for(const ad of dens){
+    const maxAn=op==='div'?1:ad;
+    for(let an=1;an<=maxAn;an++){
+      for(const bd of dens){
+        const maxBn=op==='div'?1:bd;
+        for(let bn=1;bn<=maxBn;bn++){
+          if(an===S.an&&ad===S.ad&&bn===S.bn&&bd===S.bd) continue;
+          const tA=an*L/ad, tB=bn*L/bd;
+          if(op==='sub'&&tA<tB) continue;
+          if(op==='mul'&&tA%bd!==0) continue;
+          if(op==='div'&&tA===tB) continue;
+          validPairs.push([an,ad,bn,bd]);
+        }
+      }
+    }
+  }
+  if(validPairs.length){
+    setPreset(validPairs[Math.floor(Math.random()*validPairs.length)]);
+    beep('step');
+  }
+}
+function renderChips(){
+  $('chips').innerHTML=
+    PRESETS[S.op].map((p,i)=>`<button class="chip" data-i="${i}">${fr(p[0],p[1])} ${OPS[S.op].sym} ${fr(p[2],p[3])}</button>`).join('')+
+    `<button class="chip rnd" data-rnd="1">🎲 Acak</button>`;
+}
+function updateMode(){
+  const quiz=S.mode==='quiz', calc=S.mode==='calc', game=S.mode==='game';
+  $('learn').style.display=S.mode==='learn'?'block':'none';
+  $('quiz').style.display=quiz?'block':'none';
+  $('calc').style.display=calc?'block':'none';
+  $('game').style.display=game?'block':'none';
+  $('tabs').style.display=(calc||game)?'none':'grid';
+  if(!calc&&!game) document.body.dataset.theme=S.op;
+  document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===S.mode));
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.op===S.op));
+}
+function setOp(op){
+  S.op=op; S.step=0;
+  document.body.dataset.theme=op;
+  $('opsym').textContent=OPS[op].sym;
+  renderChips();
+  if(S.mode==='quiz'){ startQuiz(op); return; }
+  if(S.mode==='calc'){ CSTATE.op=op; renderCalc(); return; }
+  setPreset(PRESETS[op][0]);
+  updateMode();
+}
+
+/* ---------- latihan ---------- */
+const POOL=[1,2,3,4,6,8,9,10];
+const frm=m=>{const g=gcd(m,12);return {n:m/g,d:12/g};};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const eqv=(x,y)=>x.n*y.d===y.n*x.d;
+function distract(op,A,B,mA,mB,corr){
+  const mist=[],near=[];
+  const add=(arr,n,d)=>{ if(Number.isInteger(n)&&Number.isInteger(d)&&n>0&&d>0) arr.push({n,d}); };
+  if(op==='add'){ add(mist,A.n+B.n,A.d+B.d); add(mist,A.n+B.n,Math.max(A.d,B.d)); add(mist,Math.abs(mA-mB),12); add(mist,mA*mB,144); }
+  if(op==='sub'){ add(mist,A.n-B.n,A.d-B.d); add(mist,A.n-B.n,Math.max(A.d,B.d)); add(mist,mA+mB,12); }
+  if(op==='mul'){ add(mist,mA+mB,12); add(mist,mA,mB); add(mist,A.n*B.n,A.d+B.d); add(mist,A.n*B.n,Math.max(A.d,B.d)); }
+  if(op==='div'){ add(mist,mA*mB,144); add(mist,mB,mA); add(mist,1,A.d+B.d); }
+  add(near,corr.n+1,corr.d); add(near,corr.n-1,corr.d); add(near,corr.n,corr.d+1); add(near,corr.n+2,corr.d);
+  const out=[];
+  const tryAdd=c=>{ if(out.length<3&&!eqv(c,corr)&&!out.some(o=>eqv(o,c))) out.push(c); };
+  shuffle(mist).forEach(tryAdd); shuffle(near).forEach(tryAdd);
+  let guard=0;
+  while(out.length<3&&guard++<200) tryAdd({n:1+Math.floor(Math.random()*24),d:12});
+  return out;
+}
+const DIVPOOL=[6,4,3,2,1];
+function genQ(op,used){
+  for(let t=0;t<1000;t++){
+    const pool=op==='div'?DIVPOOL:POOL;
+    const mA=rnd(pool), mB=rnd(pool);
+    const key=mA+'-'+mB; if(used.has(key)) continue;
+    const A=frm(mA), B=frm(mB);
+    let corr;
+    if(op==='add'){ if(mA+mB>18||mA===mB) continue; corr={n:mA+mB,d:12}; }
+    else if(op==='sub'){ if(mA<=mB) continue; corr={n:mA-mB,d:12}; }
+    else if(op==='mul'){ if(mA%B.d!==0) continue; corr={n:B.n*(mA/B.d),d:12}; }
+    else { if(mA===mB) continue; corr={n:mA,d:mB}; }
+    used.add(key);
+    const w=worked(op,A.n,A.d,B.n,B.d);
+    const expl=w.lines.join('<br>')+`<br><b>Cara cepat:</b> ${w.quick}`;
+    const opts=shuffle([{v:corr,ok:true}].concat(distract(op,A,B,mA,mB,corr).map(v=>({v,ok:false}))));
+    return {A,B,corr,opts,expl,text:`Berapa hasil ${fr(A.n,A.d)} ${OPS[op].sym} ${fr(B.n,B.d)} ?`};
+  }
+  return null;
+}
+function genSet(op){
+  const used=new Set(), qs=[];
+  while(qs.length<5){ const q=genQ(op,used); if(q) qs.push(q); }
+  return qs;
+}
+const Q={op:'add',qs:[],i:0,ans:[],phase:'intro'};
+const bests={};
+function startQuiz(op){
+  S.mode='quiz'; S.op=op; $('opsym').textContent=OPS[op].sym;
+  Q.op=op; Q.qs=genSet(op); Q.i=0; Q.ans=[]; Q.phase='intro';
+  updateMode(); renderQuiz();
+}
+function verdict(score){
+  if(score>=90) return {cls:'cr',title:'🏆 Master Operasi Pecahan',msg:'Luar biasa! Kamu menguasai operasi pecahan dengan sangat baik.'};
+  if(score>=70) return {cls:'ca',title:'✅ Lulus',msg:'Kamu memenuhi standar kemampuan. Latih lagi untuk meraih gelar Master!'};
+  return {cls:'',title:'❌ Belum lulus',msg:'Skor di bawah 70. Latihan lagi dan belajar kembali, ya.'};
+}
+function renderQuiz(){
+  const box=$('quiz'), name=OPS[Q.op].name;
+  if(Q.phase==='intro'){
+    box.innerHTML=`<div class="center"><div class="badge" style="color:var(--accent)">✏️ Latihan ${name}</div>
+      <p>5 soal pilihan ganda, 4 pilihan jawaban. Soal dibuat acak, jadi setiap latihan berbeda.</p>
+      <p class="small">Jawaban benar/salah dan pembahasan baru ditampilkan setelah kelima soal selesai.<br>Skor: kurang dari 70 = belum lulus · 70–89 = lulus · 90–100 = Master Operasi Pecahan.</p>
+      <details style="text-align:left"><summary>📌 Lihat konsep dan cara ${name}</summary><div class="recipe">${genHTML(Q.op)}</div></details>
+      ${bests[Q.op]!=null?`<p class="small">Skor terbaikmu di sesi ini: <b>${bests[Q.op]}</b></p>`:''}
+      <div class="btnrow"><button class="pri" data-act="start">Mulai ▶</button><button class="sec" data-act="learn">📖 Belajar dulu</button></div></div>`;
+    return;
+  }
+  if(Q.phase==='done'){
+    const c=Q.ans.filter(a=>a.ok).length, score=c*20, v=verdict(score);
+    const nextOp=ORDER[(ORDER.indexOf(Q.op)+1)%4];
+    box.innerHTML=`<div class="center"><div class="small">Latihan ${name} selesai</div>
+      <div class="score ${v.cls}">${score}<span class="small">/100</span></div>
+      <div class="small">${c} dari 5 soal benar</div>
+      <div class="badge ${v.cls}">${v.title}</div><p>${v.msg}</p></div>
+      <div class="btnrow"><button class="pri" data-act="eval">📋 Evaluasi jawaban</button></div>
+      <div class="btnrow">
+        ${score<70?`<button class="sec" data-act="learn">📖 Belajar kembali</button><button class="sec" data-act="again">🔁 Latihan lagi</button>`
+                  :`<button class="sec" data-act="again">🔁 Latihan lagi</button><button class="sec" data-act="nextop">Latihan ${OPS[nextOp].name} ▶</button>`}
+      </div>`;
+    return;
+  }
+  if(Q.phase==='eval'){
+    box.innerHTML=`<div class="center"><div class="badge" style="color:var(--accent)">📋 Evaluasi ${name}</div><div class="small">Skor: ${Q.ans.filter(a=>a.ok).length*20}/100</div></div>
+      ${Q.qs.map((q,i)=>{const a=Q.ans[i]; return `<div class="evcard ${a.ok?'ok':'no'}">
+        <div class="evh"><b>Soal ${i+1}</b><span>${a.ok?'✓ Benar':'✗ Salah'}</span></div>
+        <div class="evq">${q.text}</div>
+        <div>Jawabanmu: <b>${optHTML(q.opts[a.pick].v)}</b></div>
+        ${a.ok?'':`<div>Jawaban benar: <b>${optHTML(q.corr)}</b></div>`}
+        <div class="expl">${q.expl}</div></div>`;}).join('')}
+      <div class="btnrow"><button class="pri" data-act="again">🔁 Latihan lagi</button><button class="sec" data-act="learn">📖 Belajar</button><button class="sec" data-act="score">◀ Kembali ke skor</button></div>`;
+    return;
+  }
+  const q=Q.qs[Q.i], a=Q.ans[Q.i];
+  const bar=Q.qs.map((_,i)=>`<i class="${i<Q.i?'ans':(i===Q.i?'cur':'')}"></i>`).join('');
+  box.innerHTML=`<div class="qhead"><span>Latihan ${name}</span><span>Soal ${Q.i+1} dari 5</span></div>
+    <div class="pbar">${bar}</div>
+    <div class="qtext">${q.text}</div>
+    <div class="opts">${q.opts.map((o,i)=>`<button class="opt${a&&a.pick===i?' sel':''}" data-act="opt" data-i="${i}"><span class="lt">${'abcd'[i]}</span><span>${optHTML(o.v)}</span></button>`).join('')}</div>
+    <div class="btnrow"><button class="pri" data-act="next" ${a?'':'disabled style="opacity:.4"'}>${Q.i===4?'Selesai ▶':'Berikutnya ▶'}</button></div>`;
+}
+$('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const act=b.dataset.act;
+  if(act==='start'){ beep('step'); Q.phase='q'; renderQuiz(); }
+  else if(act==='opt'){ beep('pop'); const pick=+b.dataset.i; Q.ans[Q.i]={pick,ok:Q.qs[Q.i].opts[pick].ok}; renderQuiz(); }
+  else if(act==='next'){
+    if(!Q.ans[Q.i]) return;
+    if(Q.i===4){
+      Q.phase='done';
+      const sc=Q.ans.filter(a=>a.ok).length*20;
+      bests[Q.op]=Math.max(bests[Q.op]||0,sc);
+      if(sc>=70){ beep('win'); launchConfetti(); } else beep('try');
+    } else {
+      beep('step');
+      Q.i++;
+    }
+    renderQuiz();
+  }
+  else if(act==='eval'){ beep('pop'); Q.phase='eval'; renderQuiz(); window.scrollTo(0,0); }
+  else if(act==='score'){ beep('pop'); Q.phase='done'; renderQuiz(); }
+  else if(act==='again'){ beep('step'); startQuiz(Q.op); }
+  else if(act==='nextop'){ beep('step'); setOp(ORDER[(ORDER.indexOf(Q.op)+1)%4]); }
+  else if(act==='learn'){ beep('pop'); S.mode='learn'; setOp(Q.op); }
+});
+
+/* ---------- kalkulator pecahan bebas ---------- */
+const CSTATE={an:3,ad:4,bn:2,bd:5,op:'add'};
+function renderCalc(){
+  const box=$('calc');
+  const {an,ad,bn,bd,op}=CSTATE;
+  document.body.dataset.theme=op;
+  let bodyHTML='';
+  if(!Number.isInteger(an)||!Number.isInteger(ad)||!Number.isInteger(bn)||!Number.isInteger(bd)||ad===0||bd===0){
+    bodyHTML=`<div class="warn" style="display:block">Penyebut tidak boleh 0 dan semua kotak harus diisi angka bulat.</div>`;
+  } else if(op==='div'&&bn===0){
+    bodyHTML=`<div class="warn" style="display:block">Tidak bisa membagi dengan pecahan bernilai 0.</div>`;
+  } else {
+    const A=`<span class="ca">${fr(an,ad)}</span>`, B=`<span class="cb">${fr(bn,bd)}</span>`;
+    let rn, rd, steps=[];
+    if(op==='add'||op==='sub'){
+      const k=lcm(Math.abs(ad),Math.abs(bd));
+      const mA=k/Math.abs(ad), mB=k/Math.abs(bd);
+      const nA=an*(ad<0?-1:1)*mA, nB=bn*(bd<0?-1:1)*mB;
+      rn=op==='add'?nA+nB:nA-nB; rd=k;
+      steps.push(`<b>1. Samakan penyebut (KPK dari ${Math.abs(ad)} dan ${Math.abs(bd)} = ${k}):</b><br>${A} = ${fr(nA,k)} &nbsp;dan&nbsp; ${B} = ${fr(nB,k)}`);
+      steps.push(`<b>2. ${op==='add'?'Jumlahkan':'Kurangkan'} pembilangnya:</b><br>${fr(nA,k)} ${OPS[op].sym} ${fr(nB,k)} = ${fr(rn,k)}`);
+      steps.push(`<b>3. Hasil akhir & penyederhanaan:</b><br><span class="cr">${simp(rn,rd)}</span>`);
+    } else if(op==='mul'){
+      rn=an*bn; rd=ad*bd;
+      if(rd<0){rn=-rn;rd=-rd;}
+      steps.push(`<b>1. Kalikan pembilang dengan pembilang, penyebut dengan penyebut:</b><br>${A} × ${B} = ${fr(`${an} × ${bn}`,`${ad} × ${bd}`)} = ${fr(rn,rd)}`);
+      steps.push(`<b>2. Hasil akhir & penyederhanaan:</b><br><span class="cr">${simp(rn,rd)}</span>`);
+    } else {
+      rn=an*bd; rd=ad*bn;
+      if(rd<0){rn=-rn;rd=-rd;}
+      steps.push(`<b>1. Balik pecahan kedua (B), lalu ubah tanda ÷ menjadi ×:</b><br>${A} ÷ ${B} = ${A} × <span class="cb">${fr(bd,bn)}</span>`);
+      steps.push(`<b>2. Kalikan pembilang dan penyebutnya:</b><br>${fr(`${an} × ${bd}`,`${ad} × ${bn}`)} = ${fr(rn,rd)}`);
+      steps.push(`<b>3. Hasil akhir & penyederhanaan:</b><br><span class="cr">${simp(rn,rd)}</span>`);
+    }
+    const dec=(rn/rd).toLocaleString('id-ID',{maximumFractionDigits:4});
+    bodyHTML=`<div class="calc-res">
+      <div class="small" style="margin-bottom:4px">Hasil Perhitungan</div>
+      <div style="font-size:1.65rem;font-weight:700">${A} ${OPS[op].sym} ${B} = <span class="cr">${res(rn,rd)}</span></div>
+      <div class="small" style="margin-top:4px">Bentuk desimal: <b>${dec}</b></div>
+      <div class="calc-steps">${steps.join('<br>')}</div>
+    </div>`;
+  }
+  box.innerHTML=`<div class="center"><div class="badge" style="color:var(--accent)">🧮 Kalkulator Pecahan</div>
+    <p class="small" style="margin-top:0">Masukkan angka pembilang dan penyebut bebas untuk menghitung langsung beserta caranya.</p></div>
+    <div class="inputs">
+      <div><div class="fin A"><input type="number" id="can" value="${CSTATE.an}" aria-label="Pembilang A"><hr><input type="number" id="cad" value="${CSTATE.ad}" aria-label="Penyebut A"></div><div class="lbl">Pecahan A</div></div>
+      <div class="opsym">${OPS[op].sym}</div>
+      <div><div class="fin B"><input type="number" id="cbn" value="${CSTATE.bn}" aria-label="Pembilang B"><hr><input type="number" id="cbd" value="${CSTATE.bd}" aria-label="Penyebut B"></div><div class="lbl">Pecahan B</div></div>
+    </div>
+    <div class="calc-ops">
+      ${ORDER.map(k=>`<button class="cop" data-cop="${k}" aria-pressed="${k===op}">${OPS[k].sym}</button>`).join('')}
+      <button class="swap-btn" data-swap="1" title="Tukar Pecahan A dan B">🔄 Tukar A ↔ B</button>
+    </div>
+    ${bodyHTML}`;
+}
+$('calc').addEventListener('click',e=>{
+  const b=e.target.closest('[data-cop]');
+  if(b){ beep('pop'); CSTATE.op=b.dataset.cop; renderCalc(); return; }
+  const sw=e.target.closest('[data-swap]');
+  if(sw){
+    beep('step');
+    [CSTATE.an,CSTATE.ad,CSTATE.bn,CSTATE.bd]=[CSTATE.bn,CSTATE.bd,CSTATE.an,CSTATE.ad];
+    renderCalc();
+  }
+});
+$('calc').addEventListener('input',e=>{
+  if(e.target.id==='can') CSTATE.an=parseInt(e.target.value,10);
+  if(e.target.id==='cad') CSTATE.ad=parseInt(e.target.value,10);
+  if(e.target.id==='cbn') CSTATE.bn=parseInt(e.target.value,10);
+  if(e.target.id==='cbd') CSTATE.bd=parseInt(e.target.value,10);
+  renderCalc();
+  const focusEl=$(e.target.id);
+  if(focusEl) focusEl.focus();
+});
+
+/* ---------- GAME OPERASI: 4 operasi x 10 level ---------- */
+const GKEY='jejecahan_game_v1';
+const GOPS=['add','sub','mul','div'];
+const GEMO={add:'➕',sub:'➖',mul:'✖️',div:'➗'};
+const GTITLE={add:'🧩 Gabung Kotak',sub:'✂️ Potong Kotak',mul:'🌽 Kebun Irisan',div:'🍕 Pesta Kelompok'};
+const GSUB={add:'Gabungkan A dan B.',sub:'Ambil B dari A.',mul:'Ambil B bagian dari A.',div:'Ada berapa B di dalam A?'};
+const G={op:'add',prog:{add:1,sub:1,mul:1,div:1},level:1,phase:'menu',q:null,shade:new Set(),groups:0,hint:false,wrongCount:0,lastKey:'',resetAsk:false,tn:'',td:''};
+try{
+  const sv=JSON.parse(localStorage.getItem(GKEY)||'null');
+  if(sv) for(const o of GOPS) if(Number.isInteger(sv[o])) G.prog[o]=Math.min(11,Math.max(1,sv[o]));
+}catch(_){}
+function gsave(){ try{ localStorage.setItem(GKEY,JSON.stringify(G.prog)); }catch(_){} }
+
+/* ---------- efek meletus + gempa ---------- */
+function boom(){
+  beep('boom');
+  const w=document.querySelector('.wrap');
+  if(w){ w.classList.remove('quake'); void w.offsetWidth; w.classList.add('quake'); }
+  const f=document.createElement('div'); f.id='flash'; f.className='on'; document.body.appendChild(f); setTimeout(()=>f.remove(),650);
+  const em=document.createElement('div'); em.className='boomemoji'; em.textContent='💥'; document.body.appendChild(em); setTimeout(()=>em.remove(),850);
+  const cv=$('confetti'), ctx=cv.getContext('2d'); cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const cx=cv.width/2, cy=cv.height*.4, cols=['#ef4444','#f97316','#fbbf24','#fde047','#7f1d1d'];
+  const ps=Array.from({length:80},()=>{ const a=Math.random()*Math.PI*2, sp=3+Math.random()*10; return {x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:3+Math.random()*6,c:rnd(cols),l:1}; });
+  let n=0;
+  (function tick(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(const p of ps){ p.x+=p.vx; p.y+=p.vy; p.vy+=.25; p.vx*=.98; p.l-=.022; if(p.l<=0) continue; ctx.globalAlpha=p.l; ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); }
+    ctx.globalAlpha=1;
+    if(++n<50) requestAnimationFrame(tick); else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* ---------- konfigurasi level ---------- */
+/* Pasangan penyebut (semua kpk <= 20 supaya kotaknya tetap besar) */
+const P2=[[2,4],[3,6],[4,8],[5,10],[6,12]];
+const PM=[[2,6],[2,8],[3,9],[3,12],[4,12],[2,10],[5,15],[4,16],[5,20]];
+const PC=[[2,3],[2,5],[3,4],[3,5],[2,7],[4,5]];
+const PN=[[4,6],[6,9],[4,10],[2,9]];
+const GCFG={
+  add:[
+    {same:[4,5,6,8]},{same:[8,10,12,15]},{pairs:P2},{pairs:PM},{pairs:PC},{pairs:PN},
+    {pairs:PC.concat(PN),min:.6},{pairs:P2.concat(PM),over:true},{pairs:PC.concat(PN),over:true},{pairs:PC.concat(PN),over:true,lmin:12}
+  ],
+  sub:[
+    {same:[4,5,6,8]},{same:[8,10,12,15]},{pairs:P2},{pairs:PM},{pairs:PC},{pairs:PN},
+    {pairs:PC.concat(PN)},{pairs:PM.concat(PC),lmin:10},{pairs:PC.concat(PN),lmin:12},{pairs:PC.concat(PN),lmin:12,imp:true}
+  ]
+};
+/* Perkalian: jumlah kotak kebun = penyebut A x penyebut B (maks 20) */
+const MCFG=[
+  {pmin:4,pmax:8,uA:1,uB:1},{pmin:9,pmax:12,uA:1,uB:1},{pmin:13,pmax:20,uA:1,uB:1},
+  {pmin:6,pmax:12,uB:1,needA:1},{pmin:6,pmax:12,uA:1,needB:1},{pmin:9,pmax:16,needA:1,needB:1},
+  {pmin:12,pmax:20},{pmin:12,pmax:20,needA:1,needB:1},{pmin:15,pmax:20,needA:1,needB:1},{pmin:18,pmax:20,needA:1,needB:1}
+];
+/* Pembagian: cond = whole (hasil bulat) | gt (>1, ada sisa) | lt (<1) | any */
+const DALL=P2.concat(PM,PC,PN);
+const DCFG=[
+  {same:[4,5,6,8,10],nB1:1,needA:1,cond:'whole'},
+  {same:[6,8,10,12],cond:'whole'},
+  {pairs:P2.concat(PM),nA1:1,nB1:1,cond:'whole'},
+  {pairs:P2.concat(PM),cond:'whole'},
+  {pairs:DALL,cond:'whole'},
+  {pairs:DALL,cond:'gt'},
+  {pairs:DALL,cond:'lt'},
+  {pairs:DALL,cond:'any',lmin:8},
+  {pairs:PC.concat(PN),cond:'any',lmin:12},
+  {pairs:PC.concat(PN),cond:'any',lmin:12,needA:1,needB:1}
+];
+const GDESC={
+  add:['Penyebut sama','Penyebut sama, kotak lebih banyak','Penyebut kelipatan 2','Penyebut kelipatan, gambar tanpa label','Penyebut berbeda','Penyebut berbeda, kpk lebih besar','Campuran, hasil hampir 1 utuh','Hasilnya lebih dari 1 utuh','Penyebut berbeda, hasil lebih dari 1 utuh','Tantangan akhir!'],
+  sub:['Penyebut sama','Penyebut sama, kotak lebih banyak','Penyebut kelipatan 2','Penyebut kelipatan, gambar tanpa label','Penyebut berbeda','Penyebut berbeda, kpk lebih besar','Campuran','Kotak makin kecil','Penyebut berbeda, kpk besar','Tantangan akhir: A lebih dari 1 utuh!'],
+  mul:['Pecahan satuan, kebun kecil','Pecahan satuan, kebun lebih besar','Pecahan satuan, kebun besar','Pembilang A lebih dari 1','Pembilang B lebih dari 1','Kedua pembilang lebih dari 1','Campuran, kebun besar','Kebun besar, kedua pembilang > 1','Hampir 20 kotak','Tantangan akhir!'],
+  div:['Penyebut sama, hasil bulat','Penyebut sama, kelompok lebih besar','Pecahan satuan, penyebut kelipatan','Penyebut kelipatan, hasil bulat','Penyebut berbeda, hasil bulat','Hasil lebih dari 1 (ada sisa)','Hasil kurang dari 1','Campuran','Penyebut berbeda, kpk besar','Tantangan akhir!']
+};
+const GHOW={
+  add:'Kalau benar, kotaknya disamakan ukurannya (kpk). <b>Ketuk kotak</b> untuk mengarsir sebanyak hasilnya, lalu tekan <b>Periksa</b>.',
+  sub:'Kalau benar, kotaknya disamakan ukurannya (kpk). <b>Ketuk kotak</b> untuk mengarsir sebanyak sisanya, lalu tekan <b>Periksa</b>.',
+  mul:'Kalau benar, muncul <b>kebun</b>: kolom = pecahan A, baris = pecahan B. <b>Ketuk kotak yang tumpang tindih</b> (dua warna), lalu <b>Periksa</b>.',
+  div:'Kalau benar, kotak A dan B disamakan. Tekan <b>Ambil kelompok</b> sebanyak-banyaknya dari A. Kalau sudah tidak cukup, tekan <b>Selesai</b>.'
+};
+
+/* ---------- pembuat soal ---------- */
+function mkAS(op,nA,dA,nB,dB){
+  const k=lcm(dA,dB), a=nA*k/dA, b=nB*k/dB, R=op==='add'?a+b:a-b;
+  return {op,nA,dA,nB,dB,k,a,b,R,ans:{n:R,d:k}};
+}
+function genAS(op,lv){
+  const cfg=GCFG[op][lv-1];
+  for(let t=0;t<4000;t++){
+    let dA,dB;
+    if(cfg.same){ dA=dB=rnd(cfg.same); }
+    else { const pr=rnd(cfg.pairs); dA=pr[0]; dB=pr[1]; if(Math.random()<.5){ const x=dA; dA=dB; dB=x; } }
+    const k=lcm(dA,dB);
+    if(k>20||(cfg.lmin&&k<cfg.lmin)) continue;
+    const nA=(op==='sub'&&cfg.imp)?dA+1+Math.floor(Math.random()*(dA-1)):1+Math.floor(Math.random()*(dA-1));
+    const nB=1+Math.floor(Math.random()*(dB-1));
+    const a=nA*k/dA, b=nB*k/dB;
+    if(op==='add'){ const s=a+b; if(cfg.over?s<=k:s>k) continue; if(cfg.min&&s<cfg.min*k) continue; }
+    else if(a<=b) continue;
+    const key=[op,nA,dA,nB,dB].join('-'); if(key===G.lastKey) continue;
+    G.lastKey=key;
+    return mkAS(op,nA,dA,nB,dB);
+  }
+  return op==='add'?mkAS('add',1,2,1,4):mkAS('sub',3,4,1,4);
+}
+function mkMul(nA,dA,nB,dB){ return {op:'mul',nA,dA,nB,dB,k:dA*dB,a:nA,b:nB,R:nA*nB,ans:{n:nA*nB,d:dA*dB}}; }
+function genMul(lv){
+  const c=MCFG[lv-1];
+  for(let t=0;t<5000;t++){
+    const dA=2+Math.floor(Math.random()*9), dB=2+Math.floor(Math.random()*9), p=dA*dB;
+    if(p<c.pmin||p>c.pmax) continue;
+    const loA=c.needA?2:1, hiA=c.uA?1:dA-1, loB=c.needB?2:1, hiB=c.uB?1:dB-1;
+    if(loA>hiA||loB>hiB) continue;
+    const nA=loA+Math.floor(Math.random()*(hiA-loA+1)), nB=loB+Math.floor(Math.random()*(hiB-loB+1));
+    const key=['mul',nA,dA,nB,dB].join('-'); if(key===G.lastKey) continue;
+    G.lastKey=key;
+    return mkMul(nA,dA,nB,dB);
+  }
+  return mkMul(1,2,1,3);
+}
+function mkDiv(nA,dA,nB,dB){
+  const k=lcm(dA,dB), a=nA*k/dA, b=nB*k/dB;
+  return {op:'div',nA,dA,nB,dB,k,a,b,R:a,ans:{n:a,d:b}};
+}
+function genDiv(lv){
+  const c=DCFG[lv-1];
+  for(let t=0;t<8000;t++){
+    let dA,dB;
+    if(c.same){ dA=dB=rnd(c.same); }
+    else { const pr=rnd(c.pairs); dA=pr[0]; dB=pr[1]; if(Math.random()<.5){ const x=dA; dA=dB; dB=x; } }
+    const k=lcm(dA,dB);
+    if(k>20||(c.lmin&&k<c.lmin)) continue;
+    const loA=c.needA?2:1, hiA=c.nA1?1:dA-1, loB=c.needB?2:1, hiB=c.nB1?1:dB-1;
+    if(loA>hiA||loB>hiB) continue;
+    const nA=loA+Math.floor(Math.random()*(hiA-loA+1)), nB=loB+Math.floor(Math.random()*(hiB-loB+1));
+    const a=nA*k/dA, b=nB*k/dB;
+    if(a===b) continue;
+    if(c.cond==='whole'&&!(a>b&&a%b===0)) continue;
+    if(c.cond==='gt'&&!(a>b&&a%b!==0)) continue;
+    if(c.cond==='lt'&&!(a<b)) continue;
+    const key=['div',nA,dA,nB,dB].join('-'); if(key===G.lastKey) continue;
+    G.lastKey=key;
+    return mkDiv(nA,dA,nB,dB);
+  }
+  return mkDiv(1,2,1,4);
+}
+function genGame(op,lv){ return op==='mul'?genMul(lv):op==='div'?genDiv(lv):genAS(op,lv); }
+function mulOverlap(q){ const s=new Set(); for(let r=0;r<q.nB;r++) for(let c=0;c<q.nA;c++) s.add(r*q.dA+c); return s; }
+
+/* ---------- gambar persegi panjang berisi kotak satuan ---------- */
+function gridLayout(k){
+  let rows=1;
+  if(k>6){ rows=0; for(let r=2;r<=5;r++){ if(k%r===0&&k/r<=10){ rows=r; break; } } if(!rows) rows=1; }
+  return {rows,cols:k/rows};
+}
+function gridSVG(k,nRect,cellFn,inter,lay){
+  const {rows,cols}=lay||gridLayout(k), s=Math.min(34,Math.floor(300/cols),Math.floor(260/rows)), w=cols*s, h=rows*s, W=320, gap=14, lab=nRect>1?14:0;
+  const x0=(W-w)/2; let out='', y=4;
+  for(let r=0;r<nRect;r++){
+    if(lab) out+=`<text x="${x0}" y="${y+10}" font-size="11" font-weight="700" font-family="Fredoka, sans-serif" fill="#64748b">Utuh ke-${r+1}</text>`;
+    const oy=y+lab;
+    out+=`<rect x="${x0}" y="${oy}" width="${w}" height="${h}" rx="6" fill="#f1f5f9"/>`;
+    for(let j=0;j<k;j++){
+      const i=r*k+j, c=j%cols, ro=Math.floor(j/cols), st=cellFn(i)||{};
+      const cx=x0+c*s, cy=oy+ro*s;
+      out+=`<rect ${inter?`data-i="${i}" style="cursor:pointer" `:''}x="${cx+1.5}" y="${cy+1.5}" width="${s-3}" height="${s-3}" rx="4" fill="${st.fill||'#fff'}" stroke="${st.stroke||'#cbd5e1'}" stroke-width="1.5"/>`;
+      if(st.text) out+=`<text x="${cx+s/2}" y="${cy+s/2+5}" text-anchor="middle" font-size="${Math.min(16,Math.round(s*.5))}" font-weight="700" font-family="Fredoka, sans-serif" fill="${st.tc||'#fff'}" pointer-events="none">${st.text}</text>`;
+    }
+    out+=`<rect x="${x0}" y="${oy}" width="${w}" height="${h}" rx="6" fill="none" stroke="#64748b" stroke-width="2" pointer-events="none"/>`;
+    y=oy+h+gap;
+  }
+  const defs=`<defs><pattern id="ghatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#d1fae5"/><line x1="0" y1="0" x2="0" y2="8" stroke="#059669" stroke-width="3"/></pattern></defs>`;
+  return `<svg viewBox="0 0 ${W} ${y-gap+4}" width="100%" style="max-width:${W}px;display:block;margin:0 auto" role="img" aria-label="Persegi panjang berisi kotak satuan">${defs}${out}</svg>`;
+}
+const gcolA={fill:'#fb7185',stroke:'#e11d48'}, gcolB={fill:'#38bdf8',stroke:'#0284c7'};
+const GPAL=['#10b981','#8b5cf6','#f59e0b','#06b6d4','#f43f5e','#84cc16'];
+function qpic(who,n,d,showLab){
+  const c=who==='A'?gcolA:gcolB, nr=Math.max(1,Math.ceil(n/d));
+  return `<div class="gpic"><div class="gl ${who==='A'?'ca':'cb'}">Gambar ${who}${showLab?` = ${fr(n,d)}`:''}</div>${gridSVG(d,nr,i=>i<n?c:null,false)}</div>`;
+}
+function shadeBoard(q,locked){
+  if(q.op==='mul'){
+    const cols=q.dA, rows=q.dB;
+    return gridSVG(cols*rows,1,i=>{
+      const c=i%cols, r=Math.floor(i/cols), inA=c<q.nA, inB=r<q.nB;
+      if(G.shade.has(i)) return {fill:'#8b5cf6',stroke:'#6d28d9',text:'✓'};
+      if(inA&&inB) return {fill:'#e9d5ff',stroke:'#c4b5fd'};
+      if(inA) return {fill:'#fecdd3',stroke:'#fda4af'};
+      if(inB) return {fill:'#bae6fd',stroke:'#7dd3fc'};
+      return null;
+    },!locked,{rows,cols});
+  }
+  if(q.op==='div'){
+    const taken=G.groups*q.b;
+    return gridSVG(q.k,1,i=>{
+      if(i<taken){ const gi=Math.floor(i/q.b); return {fill:GPAL[gi%6],stroke:'#fff',text:String(gi+1)}; }
+      if(i<q.a) return gcolA;
+      return null;
+    },false);
+  }
+  const nr=Math.max(1,Math.ceil(Math.max(q.R,q.op==='sub'?q.a:0)/q.k));
+  return gridSVG(q.k,nr,i=>G.shade.has(i)?{fill:'url(#ghatch)',stroke:'#059669'}:null,!locked);
+}
+function gstatHTML(q){
+  if(q.op==='div'){ const rem=q.a-G.groups*q.b; return `Diambil: <b>${G.groups}</b> kelompok &nbsp;·&nbsp; Sisa: <b>${rem}</b> kotak`; }
+  return `${q.op==='mul'?'Terpilih':'Terarsir'}: <b>${G.shade.size}</b> kotak`;
+}
+function ghint(q){
+  const {op,nA,dA,nB,dB,k,a,b}=q, A=fr(nA,dA), B=fr(nB,dB);
+  if(op==='add'||op==='sub'){
+    return dA===dB?`Penyebut sudah sama: ${op==='add'?'jumlahkan':'kurangkan'} pembilangnya, penyebut tetap ${k}.`
+      :`Samakan penyebut dulu. kpk dari ${dA} dan ${dB} = ${k}. ${A} = ${fr(a,k)} dan ${B} = ${fr(b,k)}. Lalu ${op==='add'?'jumlahkan':'kurangkan'} pembilangnya.`;
+  }
+  if(op==='mul') return `Kalikan pembilang dengan pembilang, dan penyebut dengan penyebut: ${fr(`${nA} × ${nB}`,`${dA} × ${dB}`)}.`;
+  return (dA===dB?`Penyebut sudah sama (${k}). `:`Samakan penyebut (kpk = ${k}): ${A} = ${fr(a,k)} dan ${B} = ${fr(b,k)}. `)+`Berapa kali ${b} muat di dalam ${a}? Itu pembilang dan penyebutnya.`;
+}
+function startGameLevel(n){
+  G.level=n; G.q=genGame(G.op,n); G.phase='ask'; G.hint=false; G.wrongCount=0; G.shade=new Set(); G.groups=0; G.tn=''; G.td='';
+  renderGame(); window.scrollTo(0,0);
+}
+
+function renderGame(){
+  const box=$('game'); document.body.dataset.theme=G.op;
+  const op=G.op, name=OPS[op].name, sym=OPS[op].sym;
+
+  if(G.phase==='menu'||!G.q){
+    const p=G.prog[op];
+    box.innerHTML=`<div class="center"><div class="badge" style="color:var(--accent)">🎮 Game Operasi Pecahan</div>
+      <p style="margin:0">10 level, dari yang paling mudah sampai paling sulit. Selesaikan satu level untuk membuka level berikutnya.</p></div>
+      <div class="gsw">${GOPS.map(o=>`<button data-g="op" data-op="${o}" aria-pressed="${o===op}">${GEMO[o]} ${OPS[o].name}</button>`).join('')}</div>
+      <div class="center" style="margin-top:12px"><b style="color:var(--accent)">${GTITLE[op]}</b><div class="small">${GSUB[op]}</div></div>
+      <div class="lvgrid">${Array.from({length:10},(_,i)=>{const n=i+1, st=n>p?'lock':(n===p?'cur':'done'); return `<button class="lv ${st}" data-g="lv" data-n="${n}" ${st==='lock'?'disabled':''}><b>${n}</b><span>${st==='lock'?'🔒':(st==='cur'?'▶':'⭐')}</span></button>`;}).join('')}</div>
+      <p class="small center" style="margin:6px 0 0">${p>10?`🏆 Semua level ${name} sudah selesai!`:`Level yang terbuka: 1 sampai ${p}. Ketuk level untuk bermain.`}</p>
+      <details style="text-align:left"><summary>📌 Cara bermain</summary><div class="recipe"><ol>
+        <li>Lihat dua persegi panjang. <b>Kotak berwarna</b> adalah pecahannya.</li>
+        <li>Ketik jawabannya: <b>pembilang</b> di atas, <b>penyebut</b> di bawah. Kalau salah, 💥 terjadi gempa. Coba terus sampai benar!</li>
+        <li>${GHOW[op]}</li>
+        <li>Berhasil? Level berikutnya terbuka.</li></ol></div></details>
+      <div class="center"><button class="gsmall" data-g="reset">${G.resetAsk?'Yakin? Ketuk lagi untuk menghapus semua progres':'Ulangi progres dari awal'}</button></div>`;
+    return;
+  }
+
+  const q=G.q, lv=G.level, lab=lv<=3||G.hint;
+  const A=`<span class="ca">${fr(q.nA,q.dA)}</span>`, B=`<span class="cb">${fr(q.nB,q.dB)}</span>`;
+  const head=`<div class="qhead"><span>🎮 Level ${lv} dari 10</span><span>${GTITLE[op]}</span></div>
+    <div class="pbar">${Array.from({length:10},(_,i)=>`<i class="${i+1<lv?'ans':(i+1===lv?'cur':'')}"></i>`).join('')}</div>
+    <div class="small center" style="margin:-4px 0 8px">${name} · ${GDESC[op][lv-1]}</div>`;
+
+  if(G.phase==='ask'){
+    const pics=`<div class="gboard">${qpic('A',q.nA,q.dA,lab)}<div class="gopsym">${sym}</div>${qpic('B',q.nB,q.dB,lab)}</div>`;
+    box.innerHTML=head+pics+`<div class="qtext" style="margin-bottom:2px"><span class="ca">A</span> ${sym} <span class="cb">B</span> = ?</div>
+      <p class="small center" style="margin:0 0 8px">${GSUB[op]} Tulis hasilnya sebagai pecahan.</p>
+      ${lab?'':`<div class="center" style="margin:0 0 10px"><button class="swap-btn" data-g="hint">💡 Bantuan: tampilkan pecahan</button></div>`}
+      <div class="center"><div class="fin R" style="margin:0 auto"><input type="number" inputmode="numeric" min="0" id="gan" aria-label="Pembilang jawaban" placeholder="pembilang" value="${G.tn}"><hr><input type="number" inputmode="numeric" min="0" id="gad" aria-label="Penyebut jawaban" placeholder="penyebut" value="${G.td}"></div>
+      ${op==='div'?'<div class="small" style="margin-top:6px">Hasilnya bilangan bulat? Tulis penyebut 1.</div>':''}</div>
+      <div id="gmsg"></div>
+      <div class="btnrow"><button class="pri" data-g="answer">Jawab ✔</button><button class="sec" data-g="menu">🗺️ Peta level</button></div>`;
+    return;
+  }
+
+  if(G.phase==='shade'){
+    let conv, eq, instr, btns;
+    if(op==='add'||op==='sub'){
+      conv=q.dA===q.dB?`Penyebut sudah sama, yaitu <b>${q.k}</b>.`:`Samakan penyebut: kpk dari ${q.dA} dan ${q.dB} = <b>${q.k}</b><br>${A} = <span class="ca">${fr(q.a,q.k)}</span> &nbsp;dan&nbsp; ${B} = <span class="cb">${fr(q.b,q.k)}</span>`;
+      eq=`<span class="ca">${fr(q.a,q.k)}</span> ${sym} <span class="cb">${fr(q.b,q.k)}</span> = <span class="qm">${fr('?',q.k)}</span>`;
+      instr=`Ketuk kotak untuk mengarsir sebanyak hasil ${name.toLowerCase()}-nya. Ketuk lagi untuk membatalkan.`;
+      btns=`<button class="sec" data-g="clear">🧹 Hapus arsiran</button><button class="pri" data-g="check">Periksa ✔</button>`;
+    } else if(op==='mul'){
+      conv=`Bagi kebun menjadi <b>${q.dA} kolom</b>, warnai ${q.nA} kolom (${A}, merah muda).<br>Bagi menjadi <b>${q.dB} baris</b>, warnai ${q.nB} baris (${B}, biru).<br>Bagian yang <b>tumpang tindih</b> (dua warna) adalah ${A} × ${B}.`;
+      eq=`<span class="ca">${fr(q.nA,q.dA)}</span> × <span class="cb">${fr(q.nB,q.dB)}</span> = <span class="qm">${fr('?',q.k)}</span>`;
+      instr=`Ketuk semua kotak yang tumpang tindih (ungu muda). Ketuk lagi untuk membatalkan.`;
+      btns=`<button class="sec" data-g="clear">🧹 Hapus pilihan</button><button class="pri" data-g="check">Periksa ✔</button>`;
+    } else {
+      conv=q.dA===q.dB?`Penyebut sudah sama (<b>${q.k}</b>). ${A} = <b>${q.a} kotak</b>, ${B} = <b>${q.b} kotak</b>.`:`Samakan penyebut: kpk dari ${q.dA} dan ${q.dB} = <b>${q.k}</b><br>${A} = <b>${q.a} kotak</b> &nbsp;dan&nbsp; ${B} = <b>${q.b} kotak</b>`;
+      eq=`<span class="ca">${fr(q.a,q.k)}</span> ÷ <span class="cb">${fr(q.b,q.k)}</span> = <span class="qm">?</span>`;
+      instr=`Ambil kelompok B (<b>${q.b} kotak</b>) dari A sebanyak-banyaknya. Kalau sisa kotak sudah tidak cukup, tekan Selesai.`;
+      btns=`<button class="sec" data-g="clear">↺ Ulang</button><button class="pri" data-g="take">🥄 Ambil 1 kelompok</button><button class="pri" data-g="check">Selesai ✔</button>`;
+    }
+    box.innerHTML=head+`<div class="gfb ok" style="margin-top:0"><b>✅ Benar!</b> Sekarang buktikan dengan gambar.</div>
+      <div class="gconv">${conv}</div>
+      <div class="qtext" style="margin:6px 0 10px">${eq}</div>
+      <p class="small center" style="margin:0 0 8px">${instr}</p>
+      <div class="gboard" id="gshade">${shadeBoard(q,false)}</div>
+      <div class="gstat" id="gstat">${gstatHTML(q)}</div>
+      <div id="gmsg"></div>
+      <div class="btnrow">${btns}</div>`;
+    return;
+  }
+
+  /* phase 'win' */
+  let mid='', extra='';
+  if(op==='add'||op==='sub') mid=q.dA===q.dB?'':`= ${fr(q.a,q.k)} ${sym} ${fr(q.b,q.k)} `;
+  else if(op==='mul') mid=`= ${fr(`${q.nA} × ${q.nB}`,`${q.dA} × ${q.dB}`)} `;
+  else {
+    mid=q.dA===q.dB?'':`= ${fr(q.a,q.k)} ${sym} ${fr(q.b,q.k)} `;
+    const rem=q.a-Math.floor(q.a/q.b)*q.b;
+    extra=rem>0?`<p class="small center" style="margin:0 0 8px">Sisa ${rem} kotak = ${fr(rem,q.b)} kelompok.</p>`:'';
+  }
+  const result=op==='div'?simp(q.a,q.b):simp(q.ans.n,q.ans.d);
+  const finalLv=lv===10, nextOp=GOPS[(GOPS.indexOf(op)+1)%4];
+  box.innerHTML=head+`<div class="gfb ok" style="margin-top:0"><b>${finalLv?`🏆 Master ${name}! Semua 10 level selesai.`:`🎉 Hebat! Level ${lv} selesai.`}</b></div>
+    <div class="qtext" style="line-height:1.9">${A} ${sym} ${B} ${mid}= <span class="cr">${result}</span></div>${extra}
+    <div class="gboard">${shadeBoard(q,true)}</div>
+    <div class="btnrow">${finalLv
+      ?`<button class="pri" data-g="goop">Coba ${OPS[nextOp].name} ▶</button><button class="sec" data-g="menu">🗺️ Peta level</button>`
+      :`<button class="pri" data-g="next">Level ${lv+1} ▶</button><button class="sec" data-g="menu">🗺️ Peta level</button>`}</div>`;
+}
+
+function refreshShade(){
+  $('gshade').innerHTML=shadeBoard(G.q,false);
+  $('gstat').innerHTML=gstatHTML(G.q);
+  $('gmsg').innerHTML='';
+}
+function winGame(){
+  if(G.level===G.prog[G.op]){ G.prog[G.op]=Math.min(11,G.level+1); gsave(); }
+  G.phase='win'; beep('win'); launchConfetti(); renderGame();
+}
+function answerGame(){
+  const q=G.q, m=$('gmsg');
+  if(!/^\d+$/.test(G.tn)||!/^\d+$/.test(G.td)){ m.innerHTML='<div class="gfb no">Isi pembilang dan penyebut dengan angka bulat dulu ya.</div>'; return; }
+  const n=parseInt(G.tn,10), d=parseInt(G.td,10);
+  if(n<=0||d<=0){ m.innerHTML='<div class="gfb no">Pembilang dan penyebut harus lebih dari 0.</div>'; return; }
+  if(n*q.ans.d===q.ans.n*d){ beep('win'); G.phase='shade'; G.shade=new Set(); G.groups=0; renderGame(); window.scrollTo(0,0); return; }
+  G.wrongCount++; boom();
+  m.innerHTML=`<div class="gfb no"><b>💥 Masih salah!</b> Coba lagi sampai benar.${G.wrongCount>=2?`<div class="expl">💡 ${ghint(q)}</div>`:''}</div>`;
+}
+function checkGame(){
+  const q=G.q, c=G.shade.size;
+  let ok, msg;
+  if(q.op==='mul'){
+    const ov=mulOverlap(q); ok=c===ov.size&&[...ov].every(i=>G.shade.has(i));
+    msg=c===0?null:`Kamu memilih ${c} kotak. Cari kotak yang berwarna dua warna, yaitu tempat kolom A dan baris B bertemu.`;
+  } else if(q.op==='div'){
+    ok=G.groups===Math.floor(q.a/q.b);
+    msg=`Masih bisa mengambil kelompok lagi dari A. Ambil sampai sisanya tidak cukup.`;
+  } else {
+    ok=c===q.R;
+    msg=c===0?null:`Kamu mengarsir ${c} kotak, ${c<q.R?'masih kurang':'terlalu banyak'}. Petunjuk: hitung ${q.a} ${OPS[q.op].sym} ${q.b} = ?`;
+  }
+  if(ok){ winGame(); return; }
+  if(msg===null){ $('gmsg').innerHTML='<div class="gfb no">Ketuk kotak dulu ya.</div>'; return; }
+  boom();
+  $('gmsg').innerHTML=`<div class="gfb no"><b>💥 Masih salah!</b> ${msg}</div>`;
+}
+
+$('game').addEventListener('input',e=>{
+  if(e.target.id==='gan') G.tn=e.target.value;
+  if(e.target.id==='gad') G.td=e.target.value;
+});
+$('game').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&G.phase==='ask'&&(e.target.id==='gan'||e.target.id==='gad')) answerGame();
+});
+$('game').addEventListener('click',e=>{
+  const cell=e.target.closest('rect[data-i]');
+  if(cell&&G.phase==='shade'){
+    beep('pop');
+    const i=+cell.dataset.i; if(G.shade.has(i)) G.shade.delete(i); else G.shade.add(i);
+    refreshShade();
+    return;
+  }
+  const b=e.target.closest('[data-g]'); if(!b) return;
+  const g=b.dataset.g;
+  if(g==='op'){ beep('pop'); G.op=b.dataset.op; G.resetAsk=false; G.phase='menu'; renderGame(); }
+  else if(g==='lv'){ const n=+b.dataset.n; if(n>G.prog[G.op]) return; beep('step'); startGameLevel(n); }
+  else if(g==='answer'){ answerGame(); }
+  else if(g==='hint'){ beep('pop'); G.hint=true; renderGame(); }
+  else if(g==='next'){ beep('step'); startGameLevel(G.level+1); }
+  else if(g==='menu'){ beep('pop'); G.phase='menu'; G.resetAsk=false; renderGame(); window.scrollTo(0,0); }
+  else if(g==='goop'){ beep('step'); G.op=GOPS[(GOPS.indexOf(G.op)+1)%4]; G.phase='menu'; renderGame(); window.scrollTo(0,0); }
+  else if(g==='clear'){ beep('pop'); G.shade=new Set(); G.groups=0; refreshShade(); }
+  else if(g==='take'){
+    const q=G.q, rem=q.a-G.groups*q.b;
+    if(rem>=q.b){ beep('pop'); G.groups++; refreshShade(); }
+    else { boom(); $('gmsg').innerHTML=`<div class="gfb no"><b>💥 Tidak cukup!</b> Sisa ${rem} kotak kurang dari 1 kelompok B (${q.b} kotak). Tekan Selesai ✔.</div>`; }
+  }
+  else if(g==='check'){ checkGame(); }
+  else if(g==='reset'){
+    if(!G.resetAsk){ G.resetAsk=true; } else { G.prog={add:1,sub:1,mul:1,div:1}; gsave(); G.resetAsk=false; }
+    renderGame();
+  }
+});
+
+/* ---------- pengait ---------- */
+$('tabs').innerHTML=ORDER.map(k=>`<button class="tab" role="tab" data-op="${k}"><b>${OPS[k].sym}</b>${OPS[k].name}</button>`).join('');
+$('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab'); if(t){ beep('pop'); setOp(t.dataset.op); }});
+$('mode').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  beep('pop');
+  if(b.dataset.m==='quiz') startQuiz(S.op);
+  else if(b.dataset.m==='calc'){ S.mode='calc'; updateMode(); renderCalc(); }
+  else if(b.dataset.m==='game'){ S.mode='game'; updateMode(); renderGame(); }
+  else { S.mode='learn'; setOp(S.op); }
+});
+$('chips').addEventListener('click',e=>{
+  const r=e.target.closest('[data-rnd]');
+  if(r){ pickRandomValid(); return; }
+  const c=e.target.closest('.chip');
+  if(c){ beep('pop'); setPreset(PRESETS[S.op][+c.dataset.i]); }
+});
+for(const id of ['ad','bd']) $(id).innerHTML=DEN.map(d=>`<option value="${d}">${d}</option>`).join('');
+$('ad').addEventListener('change',()=>{ beep('pop'); S.ad=+$('ad').value; S.an=Math.min(S.an,S.ad); fillNum('an',S.ad,S.an,S.op==='div'); S.step=0; render(); });
+$('bd').addEventListener('change',()=>{ beep('pop'); S.bd=+$('bd').value; S.bn=Math.min(S.bn,S.bd); fillNum('bn',S.bd,S.bn,S.op==='div'); S.step=0; render(); });
+$('an').addEventListener('change',()=>{ beep('pop'); S.an=+$('an').value; S.step=0; render(); });
+$('bn').addEventListener('change',()=>{ beep('pop'); S.bn=+$('bn').value; S.step=0; render(); });
+$('stepnums').addEventListener('click',e=>{const b=e.target.closest('.sn'); if(b){ beep('step'); S.step=+b.dataset.s; render(); }});
+$('prev').onclick=()=>{ if(S.step>0){ beep('step'); S.step--; render(); } };
+$('next').onclick=()=>{ beep('step'); const n=build().steps.length; S.step=S.step>=n-1?0:S.step+1; render(); };
+$('ctabtn').onclick=()=>{ beep('step'); startQuiz(S.op); };
+$('ctagame').onclick=()=>{ beep('step'); G.op=S.op; G.phase='menu'; S.mode='game'; updateMode(); renderGame(); window.scrollTo(0,0); };
+setOp('div');
+</script>
+</body>
+</html>
